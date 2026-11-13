@@ -77,7 +77,7 @@ export function parseWindowsTerminal(json: any): { profiles: Profile[]; schemes:
 
 function windowsShells(): Profile[] {
   const out: Profile[] = [
-    { id: 'windows-powershell', name: 'Windows PowerShell', commandline: join(SYS, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'), icon: 'builtin:powershell', colorScheme: 'Campbell Powershell', startingDirectory: '~', source: 'builtin' },
+    { id: 'windows-powershell', name: 'Windows PowerShell', commandline: join(SYS, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'), icon: 'builtin:powershell', colorScheme: 'DHTerminal PowerShell', startingDirectory: '~', source: 'builtin' },
     { id: 'cmd', name: 'Command Prompt', commandline: join(SYS, 'System32', 'cmd.exe'), icon: 'builtin:cmd', colorScheme: 'Campbell', startingDirectory: '~', source: 'builtin' },
   ];
   const pwsh: string[] = [];
@@ -86,7 +86,7 @@ function windowsShells(): Profile[] {
   }
   const store = join(LOCAL, 'Microsoft', 'WindowsApps', 'pwsh.exe');
   if (!pwsh.length && existsSync(store)) pwsh.push(store);
-  pwsh.forEach((exe, i) => out.splice(1 + i, 0, { id: i ? `pwsh-${i}` : 'pwsh', name: /preview/i.test(exe) ? 'PowerShell Preview' : 'PowerShell', commandline: q(exe), icon: 'builtin:pwsh', startingDirectory: '~', source: 'builtin' }));
+  pwsh.forEach((exe, i) => out.splice(1 + i, 0, { id: i ? `pwsh-${i}` : 'pwsh', name: /preview/i.test(exe) ? 'PowerShell Preview' : 'PowerShell', commandline: q(exe), icon: 'builtin:pwsh', colorScheme: 'DHTerminal PowerShell', startingDirectory: '~', source: 'builtin' }));
   return out;
 }
 
@@ -186,7 +186,8 @@ export function detect(force = false, importWt = true): Promise<DetectResult> {
       const key = dedupeKey(p);
       if (keys.has(key) || !splitCommandline(p.commandline).file) continue;
       keys.add(key);
-      const wtScheme = wt.schemeByName[p.name.toLowerCase()];
+      const found = wt.schemeByName[p.name.toLowerCase()];
+      const wtScheme = p.colorScheme === 'DHTerminal PowerShell' && /^campbell powershell$/i.test(found ?? '') ? undefined : found;
       profiles.push({ ...p, colorScheme: wtScheme ?? p.colorScheme, icon: p.icon ?? guessIcon(p) });
     }
     return { profiles, schemes: wt.schemes };
