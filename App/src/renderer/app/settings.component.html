@@ -140,7 +140,7 @@
             <datalist id="fonts">@for (f of fonts; track f) { <option [value]="f"></option> }</datalist>
           </label>
           <label class="row">
-            <span class="row-text"><span class="row-title">{{ 'look.fontSize' | t }}</span><span class="row-sub">{{ 'look.fontSizeSub' | t }}</span></span>
+            <span class="row-text"><span class="row-title">{{ 'look.fontSize' | t }}</span></span>
             <input class="input input--num" type="number" min="6" max="48" [value]="s().fontSize" (change)="num('fontSize', $any($event.target).value)">
           </label>
           <label class="row">
@@ -212,25 +212,6 @@
             <span class="row-text"><span class="row-title">{{ 'act.scrollback' | t }}</span></span>
             <input class="input input--num" type="number" min="0" max="200000" step="1000" [value]="s().scrollback" (change)="num('scrollback', $any($event.target).value)">
           </label>
-        </div>
-        <h2 class="page-h2">{{ 'act.keys' | t }}</h2>
-        <div class="card keys">
-          <span>{{ 'keys.newTab' | t }}</span><kbd>Ctrl+Shift+T</kbd>
-          <span>{{ 'keys.profileTab' | t }}</span><kbd>Ctrl+Shift+1…9</kbd>
-          <span>{{ 'keys.split' | t }}</span><kbd>Alt+Shift+D · + · -</kbd>
-          <span>{{ 'keys.move' | t }}</span><kbd>Alt+Arrow</kbd>
-          <span>{{ 'keys.resize' | t }}</span><kbd>Alt+Shift+Arrow</kbd>
-          <span>{{ 'keys.closePane' | t }}</span><kbd>Ctrl+Shift+W</kbd>
-          <span>{{ 'keys.cycle' | t }}</span><kbd>Ctrl+Tab · Ctrl+Shift+Tab</kbd>
-          <span>{{ 'keys.goto' | t }}</span><kbd>Ctrl+Alt+1…9</kbd>
-          <span>{{ 'keys.copyPaste' | t }}</span><kbd>Ctrl+C · Ctrl+V</kbd>
-          <span>{{ 'keys.find' | t }}</span><kbd>Ctrl+Shift+F</kbd>
-          <span>{{ 'keys.palette' | t }}</span><kbd>Ctrl+Shift+P</kbd>
-          <span>{{ 'keys.menu' | t }}</span><kbd>Ctrl+Shift+Space</kbd>
-          <span>{{ 'keys.window' | t }}</span><kbd>Ctrl+Shift+N</kbd>
-          <span>{{ 'keys.fullscreen' | t }}</span><kbd>F11 · Alt+Enter</kbd>
-          <span>{{ 'keys.settings' | t }}</span><kbd>Ctrl+,</kbd>
-          <span>{{ 'keys.lock' | t }}</span><kbd>Ctrl+Shift+L</kbd>
         </div>
       }
       @case ('security') {

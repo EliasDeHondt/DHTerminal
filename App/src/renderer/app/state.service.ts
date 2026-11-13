@@ -17,7 +17,7 @@ export interface Tab {
   customTitle: ReturnType<typeof signal<string | null>>;
 }
 
-export interface Command { id: string; label: string; group: string; keys?: string; icon?: string; profileIcon?: string; run: () => void; }
+export interface Command { id: string; label: string; group: string; icon?: string; profileIcon?: string; run: () => void; }
 
 export type Overlay = null | 'palette' | 'about' | { confirmClose: number } | { contextMenu: { x: number; y: number; session: Session } };
 
@@ -38,7 +38,6 @@ export class StateService {
   overlay = signal<Overlay>(null);
   menuOpen = signal(false);
   fullscreen = signal(false);
-  digitLabels = signal<string[]>(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
   settingsSection = signal<string>('startup');
   settingsProfile = signal<string | null>(null);
   private icons = signal<Record<string, string | null>>({});
@@ -70,7 +69,6 @@ export class StateService {
     const [info, settings] = await Promise.all([bridge.info(), bridge.getSettings()]);
     this.info.set(info);
     this.settings.set(settings);
-    this.loadDigitLabels();
     await this.reloadProfiles(false);
     this.ready = true;
     this.loaded.set(true);
@@ -101,13 +99,6 @@ export class StateService {
     this.wtSchemes.set(r.schemes);
     for (const p of this.profiles()) if (p.icon && /[\\/]/.test(p.icon)) this.loadIcon(p.icon);
     this.refreshSessions();
-  }
-
-  private async loadDigitLabels() {
-    try {
-      const map = await (navigator as any).keyboard?.getLayoutMap?.();
-      if (map) this.digitLabels.set(Array.from({ length: 9 }, (_, i) => map.get('Digit' + (i + 1)) || String(i + 1)));
-    } catch {}
   }
 
   iconUrl(path: string): string | null {
@@ -431,31 +422,30 @@ export class StateService {
 
 
   commands(): Command[] {
-    const d = this.digitLabels();
     const list: Command[] = [];
-    this.visibleProfiles().forEach((p, i) => list.push({ id: 'new:' + p.id, group: 'New tab', label: t('cmd.newTab', { name: p.name }), keys: i < 9 ? `Ctrl+Shift+${d[i]}` : undefined, profileIcon: p.icon, run: () => this.newTab(p) }));
+    this.visibleProfiles().forEach(p => list.push({ id: 'new:' + p.id, group: 'New tab', label: t('cmd.newTab', { name: p.name }), profileIcon: p.icon, run: () => this.newTab(p) }));
     this.visibleProfiles().forEach(p => list.push({ id: 'split:' + p.id, group: 'Split', label: t('cmd.splitWith', { name: p.name }), profileIcon: p.icon, run: () => this.split('auto', p) }));
     list.push(
-      { id: 'split-auto', group: 'Pane', label: t('cmd.splitAuto'), keys: 'Alt+Shift+D', icon: 'splitRight', run: () => this.split('auto') },
-      { id: 'split-right', group: 'Pane', label: t('cmd.splitRight'), keys: 'Alt+Shift++', icon: 'splitRight', run: () => this.split('row') },
-      { id: 'split-down', group: 'Pane', label: t('cmd.splitDown'), keys: 'Alt+Shift+-', icon: 'splitDown', run: () => this.split('column') },
-      { id: 'close-pane', group: 'Pane', label: t('cmd.closePane'), keys: 'Ctrl+Shift+W', icon: 'close', run: () => { const s = this.activeSession(); if (s) this.closePane(s); } },
+      { id: 'split-auto', group: 'Pane', label: t('cmd.splitAuto'), icon: 'splitRight', run: () => this.split('auto') },
+      { id: 'split-right', group: 'Pane', label: t('cmd.splitRight'), icon: 'splitRight', run: () => this.split('row') },
+      { id: 'split-down', group: 'Pane', label: t('cmd.splitDown'), icon: 'splitDown', run: () => this.split('column') },
+      { id: 'close-pane', group: 'Pane', label: t('cmd.closePane'), icon: 'close', run: () => { const s = this.activeSession(); if (s) this.closePane(s); } },
       { id: 'close-tab', group: 'Tab', label: t('cmd.closeTab'), icon: 'close', run: () => this.closeTab(this.activeTabId()) },
       { id: 'close-others', group: 'Tab', label: t('cmd.closeOthers'), icon: 'close', run: () => this.closeOtherTabs(this.activeTabId()) },
-      { id: 'dup-tab', group: 'Tab', label: t('cmd.duplicate'), keys: 'Ctrl+Shift+D', icon: 'copy', run: () => this.duplicateTab() },
-      { id: 'next-tab', group: 'Tab', label: t('cmd.nextTab'), keys: 'Ctrl+Tab', run: () => this.cycleTab(1) },
-      { id: 'prev-tab', group: 'Tab', label: t('cmd.prevTab'), keys: 'Ctrl+Shift+Tab', run: () => this.cycleTab(-1) },
-      { id: 'find', group: 'Terminal', label: t('cmd.find'), keys: 'Ctrl+Shift+F', icon: 'search', run: () => this.find() },
+      { id: 'dup-tab', group: 'Tab', label: t('cmd.duplicate'), icon: 'copy', run: () => this.duplicateTab() },
+      { id: 'next-tab', group: 'Tab', label: t('cmd.nextTab'), run: () => this.cycleTab(1) },
+      { id: 'prev-tab', group: 'Tab', label: t('cmd.prevTab'), run: () => this.cycleTab(-1) },
+      { id: 'find', group: 'Terminal', label: t('cmd.find'), icon: 'search', run: () => this.find() },
       { id: 'clear', group: 'Terminal', label: t('cmd.clear'), icon: 'trash', run: () => this.activeSession()?.term.clear() },
-      { id: 'zoom-in', group: 'Terminal', label: t('cmd.zoomIn'), keys: 'Ctrl+=', run: () => this.activeSession()?.zoomBy(1) },
-      { id: 'zoom-out', group: 'Terminal', label: t('cmd.zoomOut'), keys: 'Ctrl+-', run: () => this.activeSession()?.zoomBy(-1) },
-      { id: 'zoom-reset', group: 'Terminal', label: t('cmd.zoomReset'), keys: 'Ctrl+0', run: () => this.activeSession()?.zoomBy(0) },
-      { id: 'new-window', group: 'Window', label: t('cmd.newWindow'), keys: 'Ctrl+Shift+N', icon: 'window', run: () => bridge.newWindow() },
-      { id: 'fullscreen', group: 'Window', label: t('cmd.fullscreen'), keys: 'F11', icon: 'window', run: () => bridge.toggleFullscreen() },
-      { id: 'settings', group: 'App', label: t('cmd.settings'), keys: 'Ctrl+,', icon: 'gear', run: () => this.openSettings() },
+      { id: 'zoom-in', group: 'Terminal', label: t('cmd.zoomIn'), run: () => this.activeSession()?.zoomBy(1) },
+      { id: 'zoom-out', group: 'Terminal', label: t('cmd.zoomOut'), run: () => this.activeSession()?.zoomBy(-1) },
+      { id: 'zoom-reset', group: 'Terminal', label: t('cmd.zoomReset'), run: () => this.activeSession()?.zoomBy(0) },
+      { id: 'new-window', group: 'Window', label: t('cmd.newWindow'), icon: 'window', run: () => bridge.newWindow() },
+      { id: 'fullscreen', group: 'Window', label: t('cmd.fullscreen'), icon: 'window', run: () => bridge.toggleFullscreen() },
+      { id: 'settings', group: 'App', label: t('cmd.settings'), icon: 'gear', run: () => this.openSettings() },
       { id: 'settings-json', group: 'App', label: t('cmd.settingsJson'), icon: 'external', run: () => bridge.openSettingsFile() },
       { id: 'redetect', group: 'App', label: t('cmd.redetect'), icon: 'refresh', run: () => this.reloadProfiles(true) },
-      { id: 'lock', group: 'App', label: t('cmd.lock'), keys: 'Ctrl+Shift+L', icon: 'lock', run: () => this.lock.lock() },
+      { id: 'lock', group: 'App', label: t('cmd.lock'), icon: 'lock', run: () => this.lock.lock() },
       { id: 'change-pin', group: 'App', label: t('cmd.changePin'), icon: 'key', run: () => this.lock.beginChange() },
       { id: 'theme', group: 'App', label: t('cmd.theme'), icon: this.dark() ? 'sun' : 'moon', run: () => this.toggleTheme() },
       { id: 'language', group: 'App', label: t('cmd.language'), icon: 'globe', run: () => this.saveSettings({ language: this.settings().language === 'nl' ? 'en' : 'nl' }) },

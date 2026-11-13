@@ -1,7 +1,7 @@
 {
   "name": "dhterminal",
   "productName": "DHTerminal",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "DHTerminal, a modern tabbed terminal for Windows with every shell and WSL distro in one place, by Elias De Hondt.",
   "author": "Elias De Hondt",
   "license": "SEE LICENSE IN LICENSE.md",

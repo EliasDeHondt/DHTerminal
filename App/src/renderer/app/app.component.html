@@ -33,15 +33,15 @@
             <button class="menu-item" role="menuitem" (click)="openProfile($event, p)">
               <app-profile-icon class="menu-icon" [icon]="p.icon"></app-profile-icon>
               <span class="menu-label" [class.menu-label--default]="p.id === state.defaultProfile().id">{{ p.name }}</span>
-              <span class="menu-keys">{{ shortcut(i) }}</span>
+              
             </button>
           }
           <div class="menu-sep"></div>
-          <button class="menu-item" role="menuitem" (click)="state.menuOpen.set(false); state.openSettings()"><app-icon class="menu-icon" name="gear"></app-icon><span class="menu-label">{{ 'common.settings' | t }}</span><span class="menu-keys">Ctrl+,</span></button>
-          <button class="menu-item" role="menuitem" (click)="state.toggleOverlay('palette')"><app-icon class="menu-icon" name="bolt"></app-icon><span class="menu-label">{{ 'menu.palette' | t }}</span><span class="menu-keys">Ctrl+Shift+P</span></button>
-          <button class="menu-item" role="menuitem" (click)="state.menuOpen.set(false); lock.lock()"><app-icon class="menu-icon" name="lock"></app-icon><span class="menu-label">{{ 'common.lock' | t }}</span><span class="menu-keys">Ctrl+Shift+L</span></button>
-          <button class="menu-item" role="menuitem" (click)="state.toggleOverlay('about')"><app-icon class="menu-icon" name="help"></app-icon><span class="menu-label">{{ 'common.about' | t }}</span><span class="menu-keys"></span></button>
-          <p class="menu-hint">{{ 'menu.hint' | t }}</p>
+          <button class="menu-item" role="menuitem" (click)="state.menuOpen.set(false); state.openSettings()"><app-icon class="menu-icon" name="gear"></app-icon><span class="menu-label">{{ 'common.settings' | t }}</span></button>
+          <button class="menu-item" role="menuitem" (click)="state.toggleOverlay('palette')"><app-icon class="menu-icon" name="bolt"></app-icon><span class="menu-label">{{ 'menu.palette' | t }}</span></button>
+          <button class="menu-item" role="menuitem" (click)="state.menuOpen.set(false); lock.lock()"><app-icon class="menu-icon" name="lock"></app-icon><span class="menu-label">{{ 'common.lock' | t }}</span></button>
+          <button class="menu-item" role="menuitem" (click)="state.toggleOverlay('about')"><app-icon class="menu-icon" name="help"></app-icon><span class="menu-label">{{ 'common.about' | t }}</span></button>
+
         </div>
       }
     </div>
@@ -75,9 +75,9 @@
   <div class="menu menu--floating" role="menu" [style.left.px]="clampX(m.x)" [style.top.px]="clampY(m.y, 7)">
     @if (m.tab.kind === 'terminal') {
       <button class="menu-item" role="menuitem" (click)="startRename(m.tab)"><app-icon class="menu-icon" name="edit"></app-icon><span class="menu-label">{{ 'menu.rename' | t }}</span></button>
-      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.duplicateTab()"><app-icon class="menu-icon" name="copy"></app-icon><span class="menu-label">{{ 'menu.duplicate' | t }}</span><span class="menu-keys">Ctrl+Shift+D</span></button>
-      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.split('row')"><app-icon class="menu-icon" name="splitRight"></app-icon><span class="menu-label">{{ 'menu.splitRight' | t }}</span><span class="menu-keys">Alt+Shift++</span></button>
-      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.split('column')"><app-icon class="menu-icon" name="splitDown"></app-icon><span class="menu-label">{{ 'menu.splitDown' | t }}</span><span class="menu-keys">Alt+Shift+-</span></button>
+      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.duplicateTab()"><app-icon class="menu-icon" name="copy"></app-icon><span class="menu-label">{{ 'menu.duplicate' | t }}</span></button>
+      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.split('row')"><app-icon class="menu-icon" name="splitRight"></app-icon><span class="menu-label">{{ 'menu.splitRight' | t }}</span></button>
+      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.split('column')"><app-icon class="menu-icon" name="splitDown"></app-icon><span class="menu-label">{{ 'menu.splitDown' | t }}</span></button>
       <div class="menu-sep"></div>
     }
     <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.closeOtherTabs(m.tab.id)"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">{{ 'menu.closeOthers' | t }}</span></button>
@@ -88,15 +88,15 @@
 @if (contextMenu(); as m) {
   <div class="overlay overlay--clear" (mousedown)="state.closeOverlay()" (contextmenu)="$event.preventDefault(); state.closeOverlay()"></div>
   <div class="menu menu--floating" role="menu" [style.left.px]="clampX(m.x)" [style.top.px]="clampY(m.y, 8)">
-    <button class="menu-item" role="menuitem" [disabled]="!m.session.term.hasSelection()" (click)="ctx('copy')"><app-icon class="menu-icon" name="copy"></app-icon><span class="menu-label">{{ 'menu.copy' | t }}</span><span class="menu-keys">Ctrl+C</span></button>
-    <button class="menu-item" role="menuitem" (click)="ctx('paste')"><app-icon class="menu-icon" name="paste"></app-icon><span class="menu-label">{{ 'menu.paste' | t }}</span><span class="menu-keys">Ctrl+V</span></button>
+    <button class="menu-item" role="menuitem" [disabled]="!m.session.term.hasSelection()" (click)="ctx('copy')"><app-icon class="menu-icon" name="copy"></app-icon><span class="menu-label">{{ 'menu.copy' | t }}</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('paste')"><app-icon class="menu-icon" name="paste"></app-icon><span class="menu-label">{{ 'menu.paste' | t }}</span></button>
     <button class="menu-item" role="menuitem" (click)="ctx('selectAll')"><app-icon class="menu-icon" name="check"></app-icon><span class="menu-label">{{ 'menu.selectAll' | t }}</span></button>
     <div class="menu-sep"></div>
-    <button class="menu-item" role="menuitem" (click)="ctx('splitRight')"><app-icon class="menu-icon" name="splitRight"></app-icon><span class="menu-label">{{ 'menu.splitRight' | t }}</span><span class="menu-keys">Alt+Shift++</span></button>
-    <button class="menu-item" role="menuitem" (click)="ctx('splitDown')"><app-icon class="menu-icon" name="splitDown"></app-icon><span class="menu-label">{{ 'menu.splitDown' | t }}</span><span class="menu-keys">Alt+Shift+-</span></button>
-    <button class="menu-item" role="menuitem" (click)="ctx('find')"><app-icon class="menu-icon" name="search"></app-icon><span class="menu-label">{{ 'menu.find' | t }}</span><span class="menu-keys">Ctrl+Shift+F</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('splitRight')"><app-icon class="menu-icon" name="splitRight"></app-icon><span class="menu-label">{{ 'menu.splitRight' | t }}</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('splitDown')"><app-icon class="menu-icon" name="splitDown"></app-icon><span class="menu-label">{{ 'menu.splitDown' | t }}</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('find')"><app-icon class="menu-icon" name="search"></app-icon><span class="menu-label">{{ 'menu.find' | t }}</span></button>
     <div class="menu-sep"></div>
-    <button class="menu-item" role="menuitem" (click)="ctx('close')"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">{{ 'menu.closePane' | t }}</span><span class="menu-keys">Ctrl+Shift+W</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('close')"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">{{ 'menu.closePane' | t }}</span></button>
   </div>
 }
 
@@ -113,7 +113,6 @@
             @if (c.profileIcon) { <app-profile-icon class="palette-icon" [icon]="c.profileIcon"></app-profile-icon> }
             @else { <app-icon class="palette-icon" [name]="c.icon || 'pointer'"></app-icon> }
             <span class="palette-label">{{ c.label }}</span>
-            @if (c.keys) { <kbd class="palette-keys">{{ c.keys }}</kbd> }
           </button>
         } @empty {
           <p class="palette-empty">{{ 'palette.empty' | t }}</p>

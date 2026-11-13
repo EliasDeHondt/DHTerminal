@@ -41,7 +41,7 @@
 .bar-btn { display: inline-flex; align-items: center; justify-content: center; width: 32px; height: 30px; padding: 0; border: none; border-radius: 8px; background: none; color: var(--muted); transition: background 0.15s, color 0.15s; }
 .bar-btn:hover { background: var(--hover); color: var(--text); }
 .bar-btn .ui-icon { --icon-size: 18px; }
-.menu--profiles { position: absolute; top: 34px; left: 6px; width: 440px; max-height: calc(100vh - 56px); overflow-y: auto; }
+.menu--profiles { position: absolute; top: 34px; left: 6px; width: 340px; max-height: calc(100vh - 56px); overflow-y: auto; }
 
 .content { position: relative; flex: 1; min-height: 0; }
 .tab-page { position: absolute; inset: 0; display: flex; background: var(--active-bg, var(--page)); }
@@ -84,7 +84,6 @@ app-pane, :host ::ng-deep .pane { display: flex; flex: 1; min-width: 0; min-heig
 .palette-item--sel .palette-icon { color: var(--accent-ink); }
 .palette-icon { --icon-size: 17px; color: var(--muted); }
 .palette-label { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
-.palette-keys { flex: none; padding: 1px 6px; border: 1px solid var(--line-strong); border-radius: 4px; color: var(--muted); font-size: 11.5px; }
 .palette-empty { margin: 0; padding: 16px; color: var(--muted); text-align: center; }
 
 .dialog-title--brand { color: var(--title); font-size: 22px; }

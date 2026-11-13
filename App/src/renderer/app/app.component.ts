@@ -42,7 +42,6 @@ export class AppComponent {
   contextMenu = computed(() => { const o = this.state.overlay(); return o && typeof o === 'object' && 'contextMenu' in o ? o.contextMenu : null; });
   clampX = (x: number) => Math.max(4, Math.min(x, window.innerWidth - 270));
   clampY = (y: number, items: number) => Math.max(4, Math.min(y, window.innerHeight - items * 35 - 24));
-  shortcut = (i: number) => i < 9 ? `Ctrl+Shift+${this.state.digitLabels()[i]}` : '';
 
   constructor() {
     this.state.init();
