@@ -1,26 +1,26 @@
 import { AfterViewInit, ChangeDetectionStrategy, Component, ElementRef, OnDestroy, effect, inject, input, signal, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { t, TPipe } from './i18n';
 import { IconComponent } from './icon.component';
 import { Session } from './session';
 import { PaneNode, StateService, Tab } from './state.service';
 
-/** One terminal. Its xterm element is moved in here, so splitting never restarts the shell. */
 @Component({
   selector: 'app-leaf',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, IconComponent],
+  imports: [FormsModule, IconComponent, TPipe],
   host: { class: 'leaf', '[class.leaf--active]': 'active()', '[class.leaf--multi]': 'multi()', '[class.leaf--bell]': 'flash()', '[style.background]': 'background()' },
   template: `
     <div class="leaf-term" #host></div>
     @if (session().searchOpen()) {
       <div class="search" (keydown)="searchKey($event)">
         <app-icon name="search" class="search-icon"></app-icon>
-        <input #q class="search-input" placeholder="Find" [ngModel]="query()" (ngModelChange)="query.set($event); find(1, true)" spellcheck="false" aria-label="Find in terminal">
+        <input #q class="search-input" [placeholder]="'find.placeholder' | t" [ngModel]="query()" (ngModelChange)="query.set($event); find(1, true)" spellcheck="false" [attr.aria-label]="'find.label' | t">
         <span class="search-count">{{ count() }}</span>
-        <button class="search-btn" [class.search-btn--on]="caseSensitive()" (click)="caseSensitive.set(!caseSensitive()); find(1, true)" title="Match case" aria-label="Match case">Aa</button>
-        <button class="search-btn" (click)="find(-1)" title="Previous (Shift+Enter)" aria-label="Previous match"><app-icon name="up"></app-icon></button>
-        <button class="search-btn" (click)="find(1)" title="Next (Enter)" aria-label="Next match"><app-icon name="down"></app-icon></button>
-        <button class="search-btn" (click)="closeSearch()" title="Close (Esc)" aria-label="Close find"><app-icon name="close"></app-icon></button>
+        <button class="search-btn" [class.search-btn--on]="caseSensitive()" (click)="caseSensitive.set(!caseSensitive()); find(1, true)" [title]="'find.case' | t" [attr.aria-label]="'find.case' | t">Aa</button>
+        <button class="search-btn" (click)="find(-1)" [title]="'find.prev' | t" [attr.aria-label]="'find.prevLabel' | t"><app-icon name="up"></app-icon></button>
+        <button class="search-btn" (click)="find(1)" [title]="'find.next' | t" [attr.aria-label]="'find.nextLabel' | t"><app-icon name="down"></app-icon></button>
+        <button class="search-btn" (click)="closeSearch()" [title]="'find.close' | t" [attr.aria-label]="'find.closeLabel' | t"><app-icon name="close"></app-icon></button>
       </div>
     }`,
 })
@@ -55,7 +55,7 @@ export class LeafComponent implements AfterViewInit, OnDestroy {
     const host = this.host().nativeElement;
     this.session().attach(host);
     if (this.active() && this.state.activeTab()?.kind === 'terminal' && !this.state.overlay()) this.session().focus();
-    this.resultsSub = this.session().search.onDidChangeResults(r => this.count.set(r.resultCount ? `${r.resultIndex + 1}/${r.resultCount}` : this.query() ? 'No results' : ''));
+    this.resultsSub = this.session().search.onDidChangeResults(r => this.count.set(r.resultCount ? `${r.resultIndex + 1}/${r.resultCount}` : this.query() ? t('find.none') : ''));
     this.observer = new ResizeObserver(() => { cancelAnimationFrame(this.raf); this.raf = requestAnimationFrame(() => this.session().fit()); });
     this.observer.observe(host);
   }
@@ -83,7 +83,6 @@ export class LeafComponent implements AfterViewInit, OnDestroy {
   }
 }
 
-/** A tab's pane tree: leaves, or two children with a draggable divider. */
 @Component({
   selector: 'app-pane',
   changeDetection: ChangeDetectionStrategy.OnPush,

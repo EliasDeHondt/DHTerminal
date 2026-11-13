@@ -1,0 +1,29 @@
+<div class="lock-box" [class.shake]="shaking()" tabindex="-1" role="dialog" aria-modal="true" [attr.aria-label]="title() | t">
+  <div class="lock-brand"><img class="lock-logo" src="assets/logo.svg" alt="" draggable="false"><span class="lock-word">DHTerminal</span></div>
+  <h1 class="lock-title">{{ title() | t }}</h1>
+  <p class="lock-sub">{{ sub() | t }}</p>
+  <div class="lock-step">{{ prompt() | t }}</div>
+  <div class="lock-digits" aria-live="polite" [attr.aria-label]="'lock.digits' | t: { n: entry().length }">
+    @for (i of boxes(); track i) { <span [class.f]="i < entry().length" [class.cur]="i === entry().length">{{ i < entry().length ? '•' : '' }}</span> }
+  </div>
+  <div class="lock-msg" [class.lock-msg--err]="message().kind === 'err' || waitSeconds() > 0" [class.lock-msg--ok]="message().kind === 'ok'">
+    @if (waitSeconds() > 0) { <span>{{ 'lock.retry' | t: { n: waitSeconds() } }}</span> }
+    @else if (message().text) { <span>{{ message().text }}</span> }
+    @else if (!fixedLength() && entry().length >= 4) { <span>{{ 'lock.hintContinue' | t }}</span> }
+    @else if (!fixedLength()) { <span>{{ 'lock.hintLength' | t }}</span> }
+  </div>
+  <div class="lock-pad">
+    @for (k of keys; track k) {
+      @if (k === 'back') {
+        <button type="button" class="lock-key lock-key--muted" (click)="press(k)" [disabled]="busy() || waitSeconds() > 0" [attr.aria-label]="'lock.backspace' | t"><app-icon name="backspace"></app-icon></button>
+      } @else if (k === 'enter') {
+        <button type="button" class="lock-key lock-key--enter" (click)="press(k)" [disabled]="busy() || waitSeconds() > 0 || entry().length < 4" [attr.aria-label]="'lock.confirm' | t">
+          @if (busy()) { <span class="spinner"></span> } @else { <app-icon name="check"></app-icon> }
+        </button>
+      } @else {
+        <button type="button" class="lock-key" (click)="press(k)" [disabled]="busy() || waitSeconds() > 0">{{ k }}</button>
+      }
+    }
+  </div>
+  @if (lock.mode() === 'change') { <button type="button" class="btn btn--ghost lock-cancel" (click)="lock.cancelChange()">{{ 'common.cancel' | t }}</button> }
+</div>

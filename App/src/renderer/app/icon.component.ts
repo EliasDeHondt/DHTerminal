@@ -5,7 +5,6 @@ import { StateService } from './state.service';
 
 const cache = new Map<string, SafeHtml>();
 
-/** A UI glyph: `<app-icon name="plus"/>`. */
 @Component({
   selector: 'app-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -23,7 +22,6 @@ export class IconComponent {
   });
 }
 
-/** A profile icon: built-in artwork, an emoji, or an image file from disk. */
 @Component({
   selector: 'app-profile-icon',
   changeDetection: ChangeDetectionStrategy.OnPush,
@@ -40,7 +38,6 @@ export class ProfileIconComponent {
   private sanitizer = inject(DomSanitizer);
   private state = inject(StateService);
   icon = input<string | undefined>('builtin:terminal');
-  /** used when an image file cannot be read */
   fallback = input<string>('builtin:terminal');
   private resolved = computed(() => {
     const icon = this.icon() || this.fallback();

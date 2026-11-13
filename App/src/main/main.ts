@@ -5,6 +5,7 @@ import { extname, join, normalize, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { detect } from './detect';
 import * as pty from './pty';
+import { changePin, idleFor, isUnlocked, lockApp, lockStatus, markActivity, setupPin, unlock, verify } from './lock';
 import { getSettings, saveSettings, settingsPath, watchSettings } from './settings';
 import { AppInfo, Settings, SpawnRequest } from '../shared/types';
 
@@ -17,7 +18,6 @@ const ICON = join(__dirname, '..', '..', '..', 'build', 'icon.png');
 const launch = new Map<number, { cwd: string | null; profile: string | null }>();
 const allowClose = new Set<number>();
 
-/** `--cwd <folder>` (Explorer's "Open in DHTerminal") and `--profile <name or id>`. */
 function parseArgs(argv: string[], workingDirectory: string) {
   let cwd: string | null = null, profile: string | null = null;
   for (let i = 1; i < argv.length; i++) {
@@ -31,7 +31,7 @@ function parseArgs(argv: string[], workingDirectory: string) {
 }
 
 const isDark = (s: Settings) => s.theme === 'dark' || (s.theme === 'system' && nativeTheme.shouldUseDarkColors);
-const chrome = (dark: boolean, mica: boolean) => ({ color: mica ? '#00000000' : dark ? '#1b1d22' : '#eceef2', symbolColor: dark ? '#f2f3f5' : '#14161a', height: 40 });
+const chrome = (dark: boolean, mica: boolean) => ({ color: mica ? '#00000000' : dark ? '#060709' : '#eef1f5', symbolColor: dark ? '#edeff2' : '#0c0e11', height: 40 });
 
 function createWindow(args: { cwd: string | null; profile: string | null }) {
   const s = getSettings();
@@ -39,7 +39,7 @@ function createWindow(args: { cwd: string | null; profile: string | null }) {
   const mica = s.mica && process.platform === 'win32' && Number(release().split('.')[2]) >= 22000;
   const win = new BrowserWindow({
     width: 1100, height: 680, minWidth: 460, minHeight: 280, show: false,
-    backgroundColor: mica ? '#00000000' : dark ? '#1b1d22' : '#eceef2',
+    backgroundColor: mica ? '#00000000' : dark ? '#060709' : '#eef1f5',
     ...(mica ? { backgroundMaterial: 'mica' as const } : {}),
     titleBarStyle: 'hidden', titleBarOverlay: chrome(dark, mica), icon: ICON,
     webPreferences: { preload: join(__dirname, '..', 'preload', 'preload.js'), contextIsolation: true, nodeIntegration: false, sandbox: true, spellcheck: false },
@@ -53,7 +53,6 @@ function createWindow(args: { cwd: string | null; profile: string | null }) {
   win.on('enter-full-screen', () => wc.send('window:fullscreen', true));
   win.on('leave-full-screen', () => wc.send('window:fullscreen', false));
   win.on('close', e => {
-    // the window asks first when several tabs are open; a frozen window can always be closed
     if (allowClose.has(wcId) || wc.isCrashed() || pty.sessionCount(wc) <= 1) return;
     e.preventDefault();
     wc.send('window:close-request');
@@ -115,26 +114,38 @@ function registerIpc() {
     return r.canceled ? null : r.filePaths[0];
   });
   ipcMain.handle('pty:spawn', (e, req: SpawnRequest) => {
+    if (!isUnlocked()) return { ok: false, error: 'DHTerminal is locked' };
     try { return { ok: true, ...pty.spawn(e.sender, req) }; }
     catch (err: any) { return { ok: false, error: String(err?.message ?? err) }; }
   });
-  ipcMain.on('pty:write', (_e, id: number, data: string) => pty.write(id, data));
+  ipcMain.on('pty:write', (_e, id: number, data: string) => { if (isUnlocked()) pty.write(id, data); });
   ipcMain.on('pty:resize', (_e, id: number, cols: number, rows: number) => pty.resize(id, cols, rows));
   ipcMain.on('pty:kill', (_e, id: number) => pty.kill(id));
-  ipcMain.handle('clipboard:read', () => clipboard.readText());
+  ipcMain.handle('clipboard:read', () => isUnlocked() ? clipboard.readText() : '');
   ipcMain.on('clipboard:write', (_e, text: string) => clipboard.writeText(String(text)));
   ipcMain.on('link:open', (_e, url: string) => { if (/^https?:\/\//i.test(url)) shell.openExternal(url); });
   ipcMain.on('window:new', (_e, profile?: string) => createWindow({ cwd: null, profile: typeof profile === 'string' ? profile : null }));
   ipcMain.on('window:close', e => { allowClose.add(e.sender.id); winOf(e)?.close(); });
   ipcMain.on('window:fullscreen', e => { const w = winOf(e); if (w) w.setFullScreen(!w.isFullScreen()); });
-  ipcMain.on('window:chrome', (e, dark: boolean, mica: boolean) => { try { winOf(e)?.setTitleBarOverlay(chrome(dark, mica)); } catch { /* not supported */ } });
+  const lockChanged = () => broadcast('lock:changed', isUnlocked());
+  const opening = (r: { ok: boolean }) => { if (r.ok) lockChanged(); return r; };
+  ipcMain.handle('lock:status', () => lockStatus());
+  ipcMain.handle('lock:setup', (_e, pin: string) => opening(setupPin(String(pin ?? ''))));
+  ipcMain.handle('lock:unlock', (_e, pin: string) => opening(unlock(String(pin ?? ''))));
+  ipcMain.handle('lock:verify', (_e, pin: string) => verify(String(pin ?? '')));
+  ipcMain.handle('lock:change', (_e, current: string, next: string) => changePin(String(current ?? ''), String(next ?? '')));
+  ipcMain.on('lock:lock', () => { if (isUnlocked()) { lockApp(); lockChanged(); } });
+  ipcMain.on('lock:activity', () => markActivity());
+  setInterval(() => {
+    if (isUnlocked() && idleFor() >= getSettings().autoLockMinutes * 60_000) { lockApp(); lockChanged(); }
+  }, 15_000).unref();
+  ipcMain.on('window:chrome', (e, dark: boolean, mica: boolean) => { try { winOf(e)?.setTitleBarOverlay(chrome(dark, mica)); } catch {} });
 }
 
 function applyTheme(s: Settings) { nativeTheme.themeSource = s.theme; }
 
 if (!app.requestSingleInstanceLock()) app.quit();
 else {
-  // a second start (a shortcut, or "Open in DHTerminal" in Explorer) opens a new window in this process
   app.on('second-instance', (_e, argv, workingDirectory) => createWindow(parseArgs(argv, workingDirectory)));
   app.whenReady().then(() => {
     serveRenderer();

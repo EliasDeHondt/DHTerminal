@@ -7,6 +7,7 @@ import { WebLinksAddon } from '@xterm/addon-web-links';
 import { WebglAddon } from '@xterm/addon-webgl';
 import { ColorScheme, Profile, Settings } from '../../shared/types';
 import { bridge } from './bridge';
+import { t } from './i18n';
 
 let nextId = 1;
 let webglCount = 0;
@@ -21,7 +22,6 @@ export function schemeToTheme(s: ColorScheme): ITheme {
 }
 
 export interface SessionHooks {
-  /** return true when the app used the key (shortcut), so the shell does not get it */
   onKey(ev: KeyboardEvent, session: Session): boolean;
   onExit(session: Session, code: number): void;
   onFocus(session: Session): void;
@@ -31,7 +31,6 @@ export interface SessionHooks {
   osBuild: number;
 }
 
-/** One shell in one pane: an xterm.js view wired to a ConPTY process in the main process. */
 export class Session {
   readonly id = nextId++;
   readonly title = signal('');
@@ -65,10 +64,8 @@ export class Session {
     };
   }
 
-  /** Puts the terminal in `host`; the first time it also starts the shell at the right size. */
   attach(host: HTMLElement) {
     if (this.element.parentElement !== host) {
-      // moving the element (a split) drops keyboard focus; give it back
       const hadFocus = this.element.contains(document.activeElement);
       host.appendChild(this.element);
       if (hadFocus) this.wantFocus = true;
@@ -103,14 +100,14 @@ export class Session {
   }
 
   private loadWebgl() {
-    if (webglCount >= 12) return; // browsers allow only a handful of GPU contexts; the rest draw with the DOM
+    if (webglCount >= 12) return;
     try {
       const gl = new WebglAddon();
       gl.onContextLoss(() => { gl.dispose(); if (this.webgl === gl) { this.webgl = null; webglCount--; } });
       this.term.loadAddon(gl);
       this.webgl = gl;
       webglCount++;
-    } catch { /* no GPU: the DOM renderer is used */ }
+    } catch {}
   }
 
   async start() {
@@ -120,7 +117,7 @@ export class Session {
     if (this.disposed) { if (res.ok) bridge.kill(res.id); return; }
     if (!res.ok) {
       this.error.set(res.error);
-      this.term.write(`\x1b[0m[error] Could not start ${this.profile.name}.\r\n${res.error.replace(/^Error invoking remote method[^:]*: /, '').replace(/^Error: /, '')}\r\n`);
+      this.term.write(`\x1b[0m[error] ${t('term.startFailed', { name: this.profile.name })}\r\n${res.error.replace(/^Error invoking remote method[^:]*: /, '').replace(/^Error: /, '')}\r\n`);
       this.markExited(-1);
       this.showExitMessage(-1);
       return;
@@ -130,7 +127,6 @@ export class Session {
     this.pending = [];
   }
 
-  /** Called by the state service for every `pty:data` message. */
   output(data: string) { this.term ? this.term.write(data) : this.pending.push(data); }
 
   markExited(code: number) {
@@ -138,10 +134,9 @@ export class Session {
     this.exited.set(code);
   }
 
-  /** The message Windows Terminal shows when a shell stops and the pane stays open. */
   showExitMessage(code: number) {
     const hex = code < 0 ? (code >>> 0).toString(16).toUpperCase() : code.toString(16).toUpperCase();
-    this.term.write(`\r\n\x1b[0m[process exited with code ${code} (0x${hex.padStart(8, '0')})]\r\nYou can now close this terminal with Ctrl+D, or press Enter to restart.\r\n`);
+    this.term.write(`\r\n\x1b[0m[${t('term.exited', { code })} (0x${hex.padStart(8, '0')})]\r\n${t('term.exitHint')}\r\n`);
   }
 
   private afterExitInput(data: string) {
@@ -153,7 +148,6 @@ export class Session {
     if (ev.type !== 'keydown') return true;
     if (this.hooks.onKey(ev, this)) { ev.preventDefault(); ev.stopPropagation(); return false; }
     const ctrl = ev.ctrlKey && !ev.altKey && !ev.metaKey;
-    // Ctrl+C copies when text is selected (and sends ^C when nothing is selected)
     if (ctrl && !ev.shiftKey && ev.key.toLowerCase() === 'c' && this.term.hasSelection()) { this.copy(); ev.preventDefault(); return false; }
     if (ctrl && !ev.shiftKey && ev.key.toLowerCase() === 'v') { this.paste(); ev.preventDefault(); return false; }
     return true;
@@ -173,7 +167,7 @@ export class Session {
 
   fit() {
     if (!this.term || !this.element.isConnected || !this.element.clientWidth || !this.element.clientHeight) return;
-    try { this.fitAddon.fit(); } catch { /* not visible yet */ }
+    try { this.fitAddon.fit(); } catch {}
   }
 
   focus() {
@@ -188,7 +182,6 @@ export class Session {
   }
   zoomBy(d: number) { this.setZoom(d === 0 ? 0 : this.zoom + d); }
 
-  /** Settings or colour scheme changed. */
   refresh() {
     if (!this.term) return;
     const o = this.options();

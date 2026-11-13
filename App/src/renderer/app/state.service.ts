@@ -3,6 +3,8 @@ import { mergeProfiles } from '../../shared/profiles';
 import { BUILTIN_SCHEMES, isLightColor } from '../../shared/schemes';
 import { AppInfo, ColorScheme, DEFAULT_SETTINGS, Profile, Settings } from '../../shared/types';
 import { bridge } from './bridge';
+import { t } from './i18n';
+import { LockService } from './lock.service';
 import { Session } from './session';
 
 export type PaneNode = { kind: 'leaf'; id: number; session: Session } | { kind: 'split'; id: number; dir: 'row' | 'column'; ratio: number; a: PaneNode; b: PaneNode };
@@ -25,6 +27,7 @@ let nextNodeId = 1;
 export class StateService {
   private zone = inject(NgZone);
   private injector = inject(Injector);
+  private lock = inject(LockService);
   info = signal<AppInfo | null>(null);
   settings = signal<Settings>(DEFAULT_SETTINGS);
   detected = signal<Profile[]>([]);
@@ -35,13 +38,14 @@ export class StateService {
   overlay = signal<Overlay>(null);
   menuOpen = signal(false);
   fullscreen = signal(false);
-  /** Ctrl+Shift+1 shows "Ctrl+Shift+&" on an AZERTY keyboard, like Windows Terminal. */
   digitLabels = signal<string[]>(['1', '2', '3', '4', '5', '6', '7', '8', '9']);
   settingsSection = signal<string>('startup');
   settingsProfile = signal<string | null>(null);
   private icons = signal<Record<string, string | null>>({});
   private sessions = new Map<number, Session>();
   private ready = false;
+  loaded = signal(false);
+  private firstTabOpened = false;
 
   profiles = computed(() => mergeProfiles(this.detected(), this.settings()));
   visibleProfiles = computed(() => this.profiles().filter(p => !p.hidden));
@@ -58,7 +62,6 @@ export class StateService {
   mica = computed(() => this.settings().mica && (this.info()?.osBuild ?? 0) >= 22000);
   activeTab = computed(() => this.tabs().find(t => t.id === this.activeTabId()) ?? null);
   activeSession = computed(() => { const t = this.activeTab(); return t?.kind === 'terminal' ? this.findLeaf(t.root(), t.activePane())?.session ?? null : null; });
-  /** The colour behind the active tab, so the tab and its terminal read as one surface. */
   activeBackground = computed(() => { const s = this.activeSession(); return s ? this.scheme(s.profile).background : null; });
   activeIsLight = computed(() => { const bg = this.activeBackground(); return bg ? isLightColor(bg) : !this.dark(); });
 
@@ -70,8 +73,15 @@ export class StateService {
     this.loadDigitLabels();
     await this.reloadProfiles(false);
     this.ready = true;
+    this.loaded.set(true);
+  }
+
+  openFirstTab() {
+    if (this.firstTabOpened || !this.loaded()) return;
+    this.firstTabOpened = true;
+    const info = this.info()!;
     const wanted = info.initialProfile ? this.profiles().find(p => p.id === info.initialProfile || p.name.toLowerCase() === info.initialProfile!.toLowerCase()) : null;
-    this.newTab(wanted ?? this.defaultProfile(), info.initialCwd ?? undefined);
+    if (!this.tabs().length) this.newTab(wanted ?? this.defaultProfile(), info.initialCwd ?? undefined);
   }
 
   private listen() {
@@ -97,7 +107,7 @@ export class StateService {
     try {
       const map = await (navigator as any).keyboard?.getLayoutMap?.();
       if (map) this.digitLabels.set(Array.from({ length: 9 }, (_, i) => map.get('Digit' + (i + 1)) || String(i + 1)));
-    } catch { /* keep digits */ }
+    } catch {}
   }
 
   iconUrl(path: string): string | null {
@@ -113,7 +123,7 @@ export class StateService {
 
   scheme(profile: Profile): ColorScheme {
     const all = this.schemes();
-    return all.find(s => s.name === profile.colorScheme) ?? all.find(s => s.name === this.settings().colorScheme) ?? all.find(s => s.name === 'One Half Dark')!;
+    return all.find(s => s.name === profile.colorScheme) ?? all.find(s => s.name === this.settings().colorScheme) ?? all.find(s => s.name === 'DHTerminal')!;
   }
 
   async saveSettings(patch: Partial<Settings>) {
@@ -140,7 +150,6 @@ export class StateService {
     }
   }
 
-  /* ---------- tabs and panes ---------- */
 
   private createSession(profile: Profile, cwd?: string): Session {
     const session = new Session(profile, {
@@ -181,7 +190,6 @@ export class StateService {
     this.afterRender(() => { const s = this.activeSession(); if (s) { s.fit(); s.focus(); } });
   }
 
-  /** Runs once Angular has put the latest state on screen (hidden tabs cannot take focus). */
   private afterRender(fn: () => void) { this.zone.run(() => afterNextRender(fn, { injector: this.injector })); }
 
   focusSession(s: Session, focusTerm = true) {
@@ -262,7 +270,6 @@ export class StateService {
     if (list.length) this.activateTab(list[(i + delta + list.length) % list.length].id);
   }
 
-  /** Alt+arrow: the nearest pane on that side. */
   moveFocus(dir: 'left' | 'right' | 'up' | 'down') {
     const tab = this.activeTab();
     const cur = this.activeSession();
@@ -281,7 +288,6 @@ export class StateService {
     if (best) this.focusSession(best);
   }
 
-  /** Alt+Shift+arrow: move the nearest divider. */
   resizePane(dir: 'left' | 'right' | 'up' | 'down') {
     const tab = this.activeTab();
     if (!tab?.root()) return;
@@ -329,11 +335,11 @@ export class StateService {
   }
 
   tabTitle(tab: Tab): string {
-    if (tab.kind === 'settings') return 'Settings';
+    if (tab.kind === 'settings') return t('common.settings');
     const custom = tab.customTitle();
     if (custom) return custom;
     const leaf = this.findLeaf(tab.root(), tab.activePane());
-    return leaf?.session.title() || leaf?.session.profile.name || 'Terminal';
+    return leaf?.session.title() || leaf?.session.profile.name || t('common.terminal');
   }
   tabProfile(tab: Tab): Profile | null { return tab.kind === 'terminal' ? this.findLeaf(tab.root(), tab.activePane())?.session.profile ?? null : null; }
   tabPaneCount(tab: Tab) { return this.leaves(tab.root()).length; }
@@ -360,11 +366,9 @@ export class StateService {
 
   find() { const s = this.activeSession(); if (s) s.searchOpen.set(true); }
 
-  /* ---------- keyboard ---------- */
 
-  /** Windows Terminal's default key bindings. Returns true when the key was used. */
   handleShortcut(ev: KeyboardEvent, s?: Session): boolean {
-    if (ev.getModifierState?.('AltGraph')) return false; // AltGr types characters (@ # | ...) on AZERTY
+    if (ev.getModifierState?.('AltGraph')) return false;
     const key = ev.key.length === 1 ? ev.key.toLowerCase() : ev.key;
     const code = ev.code;
     const c = ev.ctrlKey, sh = ev.shiftKey, a = ev.altKey;
@@ -381,6 +385,7 @@ export class StateService {
         case 'd': return run(() => this.duplicateTab());
         case 'f': return run(() => this.find());
         case 'p': return run(() => this.toggleOverlay('palette'));
+        case 'l': return run(() => this.lock.lock());
         case 'c': return run(() => session?.copy());
         case 'v': return run(() => session?.paste());
         case ' ': return run(() => this.menuOpen.update(v => !v));
@@ -415,6 +420,8 @@ export class StateService {
     return false;
   }
 
+  toggleTheme() { this.saveSettings({ theme: this.dark() ? 'light' : 'dark' }); }
+
   toggleOverlay(kind: 'palette' | 'about') { this.menuOpen.set(false); this.overlay.set(this.overlay() === kind ? null : kind); }
 
   closeOverlay() {
@@ -422,36 +429,39 @@ export class StateService {
     this.afterRender(() => this.activeSession()?.focus());
   }
 
-  /* ---------- command palette ---------- */
 
   commands(): Command[] {
     const d = this.digitLabels();
     const list: Command[] = [];
-    this.visibleProfiles().forEach((p, i) => list.push({ id: 'new:' + p.id, group: 'New tab', label: `New tab: ${p.name}`, keys: i < 9 ? `Ctrl+Shift+${d[i]}` : undefined, profileIcon: p.icon, run: () => this.newTab(p) }));
-    this.visibleProfiles().forEach(p => list.push({ id: 'split:' + p.id, group: 'Split', label: `Split pane: ${p.name}`, profileIcon: p.icon, run: () => this.split('auto', p) }));
+    this.visibleProfiles().forEach((p, i) => list.push({ id: 'new:' + p.id, group: 'New tab', label: t('cmd.newTab', { name: p.name }), keys: i < 9 ? `Ctrl+Shift+${d[i]}` : undefined, profileIcon: p.icon, run: () => this.newTab(p) }));
+    this.visibleProfiles().forEach(p => list.push({ id: 'split:' + p.id, group: 'Split', label: t('cmd.splitWith', { name: p.name }), profileIcon: p.icon, run: () => this.split('auto', p) }));
     list.push(
-      { id: 'split-auto', group: 'Pane', label: 'Split pane (duplicate)', keys: 'Alt+Shift+D', icon: 'splitRight', run: () => this.split('auto') },
-      { id: 'split-right', group: 'Pane', label: 'Split pane right', keys: 'Alt+Shift++', icon: 'splitRight', run: () => this.split('row') },
-      { id: 'split-down', group: 'Pane', label: 'Split pane down', keys: 'Alt+Shift+-', icon: 'splitDown', run: () => this.split('column') },
-      { id: 'close-pane', group: 'Pane', label: 'Close pane', keys: 'Ctrl+Shift+W', icon: 'close', run: () => { const s = this.activeSession(); if (s) this.closePane(s); } },
-      { id: 'close-tab', group: 'Tab', label: 'Close tab', icon: 'close', run: () => this.closeTab(this.activeTabId()) },
-      { id: 'close-others', group: 'Tab', label: 'Close other tabs', icon: 'close', run: () => this.closeOtherTabs(this.activeTabId()) },
-      { id: 'dup-tab', group: 'Tab', label: 'Duplicate tab', keys: 'Ctrl+Shift+D', icon: 'copy', run: () => this.duplicateTab() },
-      { id: 'next-tab', group: 'Tab', label: 'Next tab', keys: 'Ctrl+Tab', run: () => this.cycleTab(1) },
-      { id: 'prev-tab', group: 'Tab', label: 'Previous tab', keys: 'Ctrl+Shift+Tab', run: () => this.cycleTab(-1) },
-      { id: 'find', group: 'Terminal', label: 'Find', keys: 'Ctrl+Shift+F', icon: 'search', run: () => this.find() },
-      { id: 'clear', group: 'Terminal', label: 'Clear buffer', icon: 'trash', run: () => this.activeSession()?.term.clear() },
-      { id: 'zoom-in', group: 'Terminal', label: 'Increase font size', keys: 'Ctrl+=', run: () => this.activeSession()?.zoomBy(1) },
-      { id: 'zoom-out', group: 'Terminal', label: 'Decrease font size', keys: 'Ctrl+-', run: () => this.activeSession()?.zoomBy(-1) },
-      { id: 'zoom-reset', group: 'Terminal', label: 'Reset font size', keys: 'Ctrl+0', run: () => this.activeSession()?.zoomBy(0) },
-      { id: 'new-window', group: 'Window', label: 'New window', keys: 'Ctrl+Shift+N', icon: 'window', run: () => bridge.newWindow() },
-      { id: 'fullscreen', group: 'Window', label: 'Toggle full screen', keys: 'F11', icon: 'window', run: () => bridge.toggleFullscreen() },
-      { id: 'settings', group: 'App', label: 'Open settings', keys: 'Ctrl+,', icon: 'gear', run: () => this.openSettings() },
-      { id: 'settings-json', group: 'App', label: 'Open settings file (JSON)', icon: 'external', run: () => bridge.openSettingsFile() },
-      { id: 'redetect', group: 'App', label: 'Find shells again (WSL, Git, Visual Studio, ...)', icon: 'refresh', run: () => this.reloadProfiles(true) },
-      { id: 'about', group: 'App', label: 'About DHTerminal', icon: 'help', run: () => this.toggleOverlay('about') },
+      { id: 'split-auto', group: 'Pane', label: t('cmd.splitAuto'), keys: 'Alt+Shift+D', icon: 'splitRight', run: () => this.split('auto') },
+      { id: 'split-right', group: 'Pane', label: t('cmd.splitRight'), keys: 'Alt+Shift++', icon: 'splitRight', run: () => this.split('row') },
+      { id: 'split-down', group: 'Pane', label: t('cmd.splitDown'), keys: 'Alt+Shift+-', icon: 'splitDown', run: () => this.split('column') },
+      { id: 'close-pane', group: 'Pane', label: t('cmd.closePane'), keys: 'Ctrl+Shift+W', icon: 'close', run: () => { const s = this.activeSession(); if (s) this.closePane(s); } },
+      { id: 'close-tab', group: 'Tab', label: t('cmd.closeTab'), icon: 'close', run: () => this.closeTab(this.activeTabId()) },
+      { id: 'close-others', group: 'Tab', label: t('cmd.closeOthers'), icon: 'close', run: () => this.closeOtherTabs(this.activeTabId()) },
+      { id: 'dup-tab', group: 'Tab', label: t('cmd.duplicate'), keys: 'Ctrl+Shift+D', icon: 'copy', run: () => this.duplicateTab() },
+      { id: 'next-tab', group: 'Tab', label: t('cmd.nextTab'), keys: 'Ctrl+Tab', run: () => this.cycleTab(1) },
+      { id: 'prev-tab', group: 'Tab', label: t('cmd.prevTab'), keys: 'Ctrl+Shift+Tab', run: () => this.cycleTab(-1) },
+      { id: 'find', group: 'Terminal', label: t('cmd.find'), keys: 'Ctrl+Shift+F', icon: 'search', run: () => this.find() },
+      { id: 'clear', group: 'Terminal', label: t('cmd.clear'), icon: 'trash', run: () => this.activeSession()?.term.clear() },
+      { id: 'zoom-in', group: 'Terminal', label: t('cmd.zoomIn'), keys: 'Ctrl+=', run: () => this.activeSession()?.zoomBy(1) },
+      { id: 'zoom-out', group: 'Terminal', label: t('cmd.zoomOut'), keys: 'Ctrl+-', run: () => this.activeSession()?.zoomBy(-1) },
+      { id: 'zoom-reset', group: 'Terminal', label: t('cmd.zoomReset'), keys: 'Ctrl+0', run: () => this.activeSession()?.zoomBy(0) },
+      { id: 'new-window', group: 'Window', label: t('cmd.newWindow'), keys: 'Ctrl+Shift+N', icon: 'window', run: () => bridge.newWindow() },
+      { id: 'fullscreen', group: 'Window', label: t('cmd.fullscreen'), keys: 'F11', icon: 'window', run: () => bridge.toggleFullscreen() },
+      { id: 'settings', group: 'App', label: t('cmd.settings'), keys: 'Ctrl+,', icon: 'gear', run: () => this.openSettings() },
+      { id: 'settings-json', group: 'App', label: t('cmd.settingsJson'), icon: 'external', run: () => bridge.openSettingsFile() },
+      { id: 'redetect', group: 'App', label: t('cmd.redetect'), icon: 'refresh', run: () => this.reloadProfiles(true) },
+      { id: 'lock', group: 'App', label: t('cmd.lock'), keys: 'Ctrl+Shift+L', icon: 'lock', run: () => this.lock.lock() },
+      { id: 'change-pin', group: 'App', label: t('cmd.changePin'), icon: 'key', run: () => this.lock.beginChange() },
+      { id: 'theme', group: 'App', label: t('cmd.theme'), icon: this.dark() ? 'sun' : 'moon', run: () => this.toggleTheme() },
+      { id: 'language', group: 'App', label: t('cmd.language'), icon: 'globe', run: () => this.saveSettings({ language: this.settings().language === 'nl' ? 'en' : 'nl' }) },
+      { id: 'about', group: 'App', label: t('cmd.about'), icon: 'help', run: () => this.toggleOverlay('about') },
     );
-    for (const sc of this.schemes()) list.push({ id: 'scheme:' + sc.name, group: 'Color scheme', label: `Color scheme: ${sc.name}`, icon: 'swatch', run: () => this.saveSettings({ colorScheme: sc.name }) });
+    for (const sc of this.schemes()) list.push({ id: 'scheme:' + sc.name, group: 'Color scheme', label: t('cmd.scheme', { name: sc.name }), icon: 'swatch', run: () => this.saveSettings({ colorScheme: sc.name }) });
     return list;
   }
 }

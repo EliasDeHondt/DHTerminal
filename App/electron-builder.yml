@@ -9,13 +9,11 @@ files:
   - dist/renderer/browser/**/*
   - build/icon.png
   - package.json
-# node-pty ships N-API prebuilds (ConPTY + OpenConsole), so nothing has to be compiled for Electron
 npmRebuild: false
 asar: true
 asarUnpack:
   - node_modules/node-pty/**/*
 win:
-  # one file for users: the installer (it also updates an existing installation)
   target:
     - target: nsis
       arch:
@@ -33,7 +31,6 @@ nsis:
   uninstallDisplayName: DHTerminal
   include: build/installer.nsh
   differentialPackage: false
-  # the installer always speaks English
   installerLanguages:
     - en_US
   language: '1033'

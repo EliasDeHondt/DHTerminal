@@ -19,9 +19,6 @@ function run(file: string, args: string[], encoding: BufferEncoding = 'utf8'): P
   });
 }
 
-/* ---------- pure parsers (exported for the tests) ---------- */
-
-/** `reg query ...\Lxss /s /v DistributionName` → distro names, Docker's internal ones left out. */
 export function parseLxss(output: string): string[] {
   const names: string[] = [];
   for (const line of output.split(/\r?\n/)) {
@@ -31,7 +28,6 @@ export function parseLxss(output: string): string[] {
   return names;
 }
 
-/** Plain `Host` entries from ~/.ssh/config (no wildcards, no negations). */
 export function parseSshConfig(text: string): string[] {
   const hosts: string[] = [];
   for (const line of text.split(/\r?\n/)) {
@@ -42,7 +38,6 @@ export function parseSshConfig(text: string): string[] {
   return hosts;
 }
 
-/** Windows Terminal writes JSON with comments and trailing commas. */
 export function parseJsonc(text: string): any {
   let out = '';
   let inString = false;
@@ -61,11 +56,10 @@ const iconPath = (icon: unknown): string | undefined => {
   if (typeof icon !== 'string' || !icon.trim()) return undefined;
   const value = expandEnv(icon.trim(), env);
   if (/^ms-appx:|^https?:/i.test(value)) return undefined;
-  if ([...value].length <= 2 && !/[\\/.]/.test(value)) return value; // an emoji
+  if ([...value].length <= 2 && !/[\\/.]/.test(value)) return value;
   return existsSync(value) ? value : undefined;
 };
 
-/** Your own Windows Terminal profiles (the ones with a command line) and colour schemes. */
 export function parseWindowsTerminal(json: any): { profiles: Profile[]; schemes: ColorScheme[]; schemeByName: Record<string, string> } {
   const list: any[] = Array.isArray(json?.profiles) ? json.profiles : Array.isArray(json?.profiles?.list) ? json.profiles.list : [];
   const profiles: Profile[] = [];
@@ -81,17 +75,14 @@ export function parseWindowsTerminal(json: any): { profiles: Profile[]; schemes:
   return { profiles, schemes, schemeByName };
 }
 
-/* ---------- detection ---------- */
-
 function windowsShells(): Profile[] {
   const out: Profile[] = [
     { id: 'windows-powershell', name: 'Windows PowerShell', commandline: join(SYS, 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe'), icon: 'builtin:powershell', colorScheme: 'Campbell Powershell', startingDirectory: '~', source: 'builtin' },
     { id: 'cmd', name: 'Command Prompt', commandline: join(SYS, 'System32', 'cmd.exe'), icon: 'builtin:cmd', colorScheme: 'Campbell', startingDirectory: '~', source: 'builtin' },
   ];
-  // PowerShell 7+ (installer, Microsoft Store, preview)
   const pwsh: string[] = [];
   for (const root of [join(PF, 'PowerShell'), join(PF86, 'PowerShell')]) {
-    try { for (const v of readdirSync(root).sort().reverse()) { const exe = join(root, v, 'pwsh.exe'); if (existsSync(exe)) pwsh.push(exe); } } catch { /* not installed */ }
+    try { for (const v of readdirSync(root).sort().reverse()) { const exe = join(root, v, 'pwsh.exe'); if (existsSync(exe)) pwsh.push(exe); } } catch {}
   }
   const store = join(LOCAL, 'Microsoft', 'WindowsApps', 'pwsh.exe');
   if (!pwsh.length && existsSync(store)) pwsh.push(store);
@@ -152,7 +143,6 @@ function sshHosts(): Profile[] {
   return parseSshConfig(text).map(h => ({ id: 'ssh:' + h.toLowerCase(), name: `SSH: ${h}`, commandline: `${existsSync(ssh) ? q(ssh) : 'ssh.exe'} ${h}`, icon: 'builtin:ssh', source: 'ssh' as const }));
 }
 
-/** Profiles other apps register for Windows Terminal ("fragments"), e.g. Git for Windows. */
 function fragments(): Profile[] {
   const out: Profile[] = [];
   for (const root of [join(env['ProgramData'] || 'C:\\ProgramData', 'Microsoft', 'Windows Terminal', 'Fragments'), join(LOCAL, 'Microsoft', 'Windows Terminal', 'Fragments')]) {
@@ -165,7 +155,7 @@ function fragments(): Profile[] {
         try {
           const parsed = parseWindowsTerminal(parseJsonc(readFileSync(join(root, appName, f), 'utf8')));
           for (const p of parsed.profiles) out.push({ ...p, id: p.id.replace(/^wt:/, 'fragment:'), source: 'fragment' });
-        } catch { /* broken fragment */ }
+        } catch {}
       }
     }
   }
@@ -178,14 +168,13 @@ function windowsTerminal() {
     join(LOCAL, 'Packages', 'Microsoft.WindowsTerminalPreview_8wekyb3d8bbwe', 'LocalState', 'settings.json'),
     join(LOCAL, 'Microsoft', 'Windows Terminal', 'settings.json'),
   ]) {
-    try { return parseWindowsTerminal(parseJsonc(readFileSync(file, 'utf8'))); } catch { /* next */ }
+    try { return parseWindowsTerminal(parseJsonc(readFileSync(file, 'utf8'))); } catch {}
   }
   return { profiles: [], schemes: [], schemeByName: {} as Record<string, string> };
 }
 
 let cached: Promise<DetectResult> | null = null;
 
-/** Every shell on this PC, in the same order Windows Terminal shows them. */
 export function detect(force = false, importWt = true): Promise<DetectResult> {
   if (!cached || force) cached = (async () => {
     const [wsl, vs] = await Promise.all([wslDistros(), visualStudio()]);
@@ -197,7 +186,6 @@ export function detect(force = false, importWt = true): Promise<DetectResult> {
       const key = dedupeKey(p);
       if (keys.has(key) || !splitCommandline(p.commandline).file) continue;
       keys.add(key);
-      // keep the colour scheme you picked for the same shell in Windows Terminal
       const wtScheme = wt.schemeByName[p.name.toLowerCase()];
       profiles.push({ ...p, colorScheme: wtScheme ?? p.colorScheme, icon: p.icon ?? guessIcon(p) });
     }

@@ -1,8 +1,12 @@
-import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, effect, inject, signal, viewChild } from '@angular/core';
+import { ChangeDetectionStrategy, Component, ElementRef, HostListener, computed, effect, inject, signal, untracked, viewChild } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { Profile } from '../../shared/types';
 import { bridge } from './bridge';
+import { enableCustomSelects } from './custom-select';
+import { language, TPipe } from './i18n';
 import { IconComponent, ProfileIconComponent } from './icon.component';
+import { LockScreenComponent } from './lock-screen.component';
+import { LockService } from './lock.service';
 import { PaneComponent } from './pane.component';
 import { SettingsComponent } from './settings.component';
 import { Command, StateService, Tab } from './state.service';
@@ -10,13 +14,14 @@ import { Command, StateService, Tab } from './state.service';
 @Component({
   selector: 'app-root',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [FormsModule, IconComponent, ProfileIconComponent, PaneComponent, SettingsComponent],
+  imports: [FormsModule, IconComponent, ProfileIconComponent, PaneComponent, SettingsComponent, LockScreenComponent, TPipe],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css',
   host: { '[class.dark]': 'state.dark()', '[class.light]': '!state.dark()', '[class.mica]': 'state.mica()', '[class.fullscreen]': 'state.fullscreen()', '[style.--active-bg]': 'state.activeBackground()' },
 })
 export class AppComponent {
   state = inject(StateService);
+  lock = inject(LockService);
   paletteInput = viewChild<ElementRef<HTMLInputElement>>('paletteInput');
   renameInput = viewChild<ElementRef<HTMLInputElement>>('renameInput');
   query = signal('');
@@ -35,14 +40,22 @@ export class AppComponent {
   });
   confirmCount = computed(() => { const o = this.state.overlay(); return o && typeof o === 'object' && 'confirmClose' in o ? o.confirmClose : 0; });
   contextMenu = computed(() => { const o = this.state.overlay(); return o && typeof o === 'object' && 'contextMenu' in o ? o.contextMenu : null; });
-  /** keeps a context menu inside the window */
   clampX = (x: number) => Math.max(4, Math.min(x, window.innerWidth - 270));
   clampY = (y: number, items: number) => Math.max(4, Math.min(y, window.innerHeight - items * 35 - 24));
   shortcut = (i: number) => i < 9 ? `Ctrl+Shift+${this.state.digitLabels()[i]}` : '';
 
   constructor() {
     this.state.init();
+    this.lock.start();
+    enableCustomSelects();
     effect(() => bridge.setChrome(this.state.dark(), this.state.mica()));
+    effect(() => { const lang = this.state.settings().language; language.set(lang); document.documentElement.lang = lang; });
+    effect(() => { const root = document.documentElement; root.dataset['theme'] = this.state.dark() ? 'dark' : 'light'; root.classList.toggle('mica', this.state.mica()); });
+    effect(() => {
+      const mode = this.lock.mode();
+      if (mode === 'unlocked' && this.state.loaded()) untracked(() => { this.state.openFirstTab(); queueMicrotask(() => this.state.activeSession()?.focus()); });
+      if (mode === 'locked') untracked(() => { this.state.menuOpen.set(false); this.tabMenu.set(null); this.renaming.set(null); if (this.state.overlay()) this.state.overlay.set(null); });
+    });
     effect(() => {
       if (this.state.overlay() === 'palette') { this.query.set(''); this.selected.set(0); queueMicrotask(() => this.paletteInput()?.nativeElement.focus()); }
     });
@@ -50,7 +63,6 @@ export class AppComponent {
     effect(() => { if (this.renaming() !== null) queueMicrotask(() => { const el = this.renameInput()?.nativeElement; el?.focus(); el?.select(); }); });
   }
 
-  /* ---------- tabs ---------- */
 
   tabMouseDown(ev: MouseEvent, tab: Tab) {
     if (ev.button === 1) { ev.preventDefault(); this.state.closeTab(tab.id); }
@@ -93,11 +105,9 @@ export class AppComponent {
   }
   dragEnd() { this.dragTab.set(null); this.dropIndex.set(null); }
 
-  /* ---------- new tab menu ---------- */
 
   toggleMenu(ev?: MouseEvent) { ev?.stopPropagation(); this.state.menuOpen.update(v => !v); }
 
-  /** Click: new tab. Alt+click: split pane. Shift+click: new window. */
   openProfile(ev: MouseEvent | KeyboardEvent, p: Profile) {
     this.state.menuOpen.set(false);
     if (ev.altKey) this.state.split('auto', p);
@@ -113,7 +123,6 @@ export class AppComponent {
     else if (ev.key === 'Escape') { ev.preventDefault(); this.state.menuOpen.set(false); this.state.activeSession()?.focus(); }
   }
 
-  /* ---------- palette ---------- */
 
   paletteKey(ev: KeyboardEvent) {
     const list = this.filtered();
@@ -125,7 +134,6 @@ export class AppComponent {
   private scrollSelected() { queueMicrotask(() => document.querySelector('.palette-item--sel')?.scrollIntoView({ block: 'nearest' })); }
   runCommand(c: Command) { this.state.closeOverlay(); c.run(); }
 
-  /* ---------- context menu ---------- */
 
   ctx(action: 'copy' | 'paste' | 'splitRight' | 'splitDown' | 'find' | 'close' | 'selectAll') {
     const m = this.contextMenu();
@@ -148,7 +156,6 @@ export class AppComponent {
 
   @HostListener('window:keydown', ['$event'])
   windowKey(ev: KeyboardEvent) {
-    // keys pressed while a terminal has focus are handled in Session; this covers menus, settings and dialogs
     if (ev.defaultPrevented || (ev.target as HTMLElement)?.classList?.contains('xterm-helper-textarea')) return;
     if (ev.key === 'Escape' && (this.state.overlay() || this.state.menuOpen() || this.tabMenu())) { this.state.menuOpen.set(false); this.tabMenu.set(null); this.state.closeOverlay(); return; }
     const editing = /^(INPUT|TEXTAREA|SELECT)$/.test((ev.target as HTMLElement)?.tagName ?? '');
@@ -163,7 +170,6 @@ export class AppComponent {
     if (this.tabMenu() && !t.closest('.menu')) this.tabMenu.set(null);
   }
 
-  /** coming back to the window puts the cursor back in the active terminal */
   @HostListener('window:focus') windowFocus() {
     if (document.activeElement === document.body && !this.state.overlay() && !this.state.menuOpen()) this.state.activeSession()?.focus();
   }

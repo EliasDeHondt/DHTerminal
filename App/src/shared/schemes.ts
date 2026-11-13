@@ -4,7 +4,6 @@ const tango = { black: '#000000', red: '#CC0000', green: '#4E9A06', yellow: '#C4
 const solarized = { black: '#002B36', red: '#DC322F', green: '#859900', yellow: '#B58900', blue: '#268BD2', purple: '#D33682', cyan: '#2AA198', white: '#EEE8D5', brightBlack: '#073642', brightRed: '#CB4B16', brightGreen: '#586E75', brightYellow: '#657B83', brightBlue: '#839496', brightPurple: '#6C71C4', brightCyan: '#93A1A1', brightWhite: '#FDF6E3' };
 const campbell = { black: '#0C0C0C', red: '#C50F1F', green: '#13A10E', yellow: '#C19C00', blue: '#0037DA', purple: '#881798', cyan: '#3A96DD', white: '#CCCCCC', brightBlack: '#767676', brightRed: '#E74856', brightGreen: '#16C60C', brightYellow: '#F9F1A5', brightBlue: '#3B78FF', brightPurple: '#B4009E', brightCyan: '#61D6D6', brightWhite: '#F2F2F2' };
 
-/** The schemes every install has. Windows Terminal and your own schemes are added on top. */
 export const BUILTIN_SCHEMES: ColorScheme[] = [
   { name: 'DHTerminal', background: '#0D1016', foreground: '#EDEFF2', cursorColor: '#4F94F0', selectionBackground: '#3D587B', black: '#141924', red: '#F87171', green: '#1BAF7A', yellow: '#EDA100', blue: '#4F94F0', purple: '#C084FC', cyan: '#56B6C2', white: '#C9CED6', brightBlack: '#5A6374', brightRed: '#FCA5A5', brightGreen: '#34D399', brightYellow: '#FCD34D', brightBlue: '#86B6FF', brightPurple: '#D8B4FE', brightCyan: '#7DD3FC', brightWhite: '#FFFFFF' },
   { name: 'DHTerminal Light', background: '#F6F7F9', foreground: '#0C0E11', cursorColor: '#0F54AE', selectionBackground: '#BFD6F6', black: '#0C0E11', red: '#C0392B', green: '#118A5E', yellow: '#A16207', blue: '#0F54AE', purple: '#7C3AED', cyan: '#0E7490', white: '#6C757D', brightBlack: '#5A6374', brightRed: '#E74C3C', brightGreen: '#1BAF7A', brightYellow: '#CA8A04', brightBlue: '#4F94F0', brightPurple: '#A855F7', brightCyan: '#0891B2', brightWhite: '#FFFFFF' },
@@ -22,7 +21,6 @@ export const BUILTIN_SCHEMES: ColorScheme[] = [
 
 const KEYS: (keyof ColorScheme)[] = ['background', 'foreground', 'black', 'red', 'green', 'yellow', 'blue', 'purple', 'cyan', 'white', 'brightBlack', 'brightRed', 'brightGreen', 'brightYellow', 'brightBlue', 'brightPurple', 'brightCyan', 'brightWhite'];
 
-/** Accepts a Windows Terminal scheme object; fills cursor/selection when missing, rejects anything incomplete. */
 export function normalizeScheme(raw: any): ColorScheme | null {
   if (!raw || typeof raw.name !== 'string' || !raw.name.trim()) return null;
   const hex = /^#([0-9a-f]{3}|[0-9a-f]{6}|[0-9a-f]{8})$/i;
@@ -34,7 +32,6 @@ export function normalizeScheme(raw: any): ColorScheme | null {
   return out as ColorScheme;
 }
 
-/** Relative luminance check, used to pick light or dark chrome around a terminal. */
 export function isLightColor(hex: string): boolean {
   let h = hex.replace('#', '');
   if (h.length === 3) h = h.split('').map(c => c + c).join('');

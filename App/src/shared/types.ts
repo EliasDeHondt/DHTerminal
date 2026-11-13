@@ -1,22 +1,18 @@
-// Everything the main process and the window share. Kept free of Node and DOM imports.
 
 export type ProfileSource = 'builtin' | 'wsl' | 'git' | 'vs' | 'msys' | 'ssh' | 'fragment' | 'windows-terminal' | 'custom';
 export type CursorStyle = 'bar' | 'block' | 'underline';
 export type AppTheme = 'system' | 'dark' | 'light';
+export type Language = 'nl' | 'en';
 
 export interface Profile {
   id: string;
   name: string;
-  /** Windows style command line, e.g. `"C:\Program Files\Git\bin\bash.exe" -i -l`. */
   commandline: string;
-  /** Folder to start in. `~` means your home folder, `%VARS%` are expanded. Empty = home. */
   startingDirectory?: string;
-  /** `builtin:<name>`, an emoji, or a path to an .ico/.png/.svg file. */
   icon?: string;
   colorScheme?: string;
   hidden?: boolean;
   source: ProfileSource;
-  /** WSL distro name; the folder is passed to wsl.exe instead of the Windows process. */
   wslDistro?: string;
   env?: Record<string, string>;
   tabColor?: string;
@@ -32,6 +28,7 @@ export interface ColorScheme {
 export interface Settings {
   defaultProfile: string;
   theme: AppTheme;
+  language: Language;
   mica: boolean;
   colorScheme: string;
   fontFamily: string;
@@ -45,14 +42,16 @@ export interface Settings {
   confirmCloseTabs: boolean;
   closeOnExit: 'graceful' | 'always' | 'never';
   bell: 'flash' | 'none';
-  /** Changes made in the window on top of a detected profile (name, icon, hidden, ...). */
   profileOverrides: Record<string, Partial<Profile>>;
   customProfiles: Profile[];
   profileOrder: string[];
   customSchemes: ColorScheme[];
-  /** Pull in the profiles and colour schemes you made in Windows Terminal. */
   importWindowsTerminal: boolean;
+  autoLockMinutes: number;
 }
+
+export interface LockStatus { hasPin: boolean; length: number | null; retryAfter: number; unlocked: boolean; }
+export interface UnlockResult { ok: boolean; retryAfter: number; }
 
 export interface DetectResult {
   profiles: Profile[];
@@ -80,8 +79,9 @@ export interface AppInfo {
 export const DEFAULT_SETTINGS: Settings = {
   defaultProfile: '',
   theme: 'system',
-  mica: true,
-  colorScheme: 'One Half Dark',
+  language: 'en',
+  mica: false,
+  colorScheme: 'DHTerminal',
   fontFamily: "'Cascadia Mono', 'Cascadia Code', Consolas, 'Courier New', monospace",
   fontSize: 14,
   lineHeight: 1.15,
@@ -98,4 +98,5 @@ export const DEFAULT_SETTINGS: Settings = {
   profileOrder: [],
   customSchemes: [],
   importWindowsTerminal: true,
+  autoLockMinutes: 30,
 };

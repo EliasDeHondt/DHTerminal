@@ -8,7 +8,6 @@ let lastWritten = '';
 
 export function settingsPath() { return join(app.getPath('userData'), 'settings.json'); }
 
-/** Unknown or broken values fall back to the defaults instead of breaking the window. */
 export function sanitize(raw: any): Settings {
   const s: Settings = { ...DEFAULT_SETTINGS };
   if (!raw || typeof raw !== 'object') return s;
@@ -20,14 +19,20 @@ export function sanitize(raw: any): Settings {
   }
   s.fontSize = Math.min(48, Math.max(6, Number(s.fontSize) || DEFAULT_SETTINGS.fontSize));
   s.lineHeight = Math.min(2, Math.max(1, Number(s.lineHeight) || DEFAULT_SETTINGS.lineHeight));
+  s.autoLockMinutes = Math.min(480, Math.max(5, Math.round(Number(s.autoLockMinutes) || DEFAULT_SETTINGS.autoLockMinutes)));
   s.scrollback = Math.min(200000, Math.max(0, Math.round(Number(s.scrollback) || 0)));
   if (!['bar', 'block', 'underline'].includes(s.cursorStyle)) s.cursorStyle = DEFAULT_SETTINGS.cursorStyle;
   if (!['system', 'dark', 'light'].includes(s.theme)) s.theme = DEFAULT_SETTINGS.theme;
+  if (!['nl', 'en'].includes(raw.language)) s.language = systemLanguage();
   if (!['graceful', 'always', 'never'].includes(s.closeOnExit)) s.closeOnExit = DEFAULT_SETTINGS.closeOnExit;
   if (typeof s.profileOverrides !== 'object' || Array.isArray(s.profileOverrides)) s.profileOverrides = {};
   s.customProfiles = s.customProfiles.filter(p => p && typeof p.id === 'string' && typeof p.commandline === 'string').map(p => ({ ...p, source: 'custom' as const }));
   s.profileOrder = s.profileOrder.filter(id => typeof id === 'string');
   return s;
+}
+
+function systemLanguage(): Settings['language'] {
+  try { return /^nl/i.test(app.getPreferredSystemLanguages()[0] ?? app.getLocale()) ? 'nl' : 'en'; } catch { return 'en'; }
 }
 
 export function getSettings(): Settings {
@@ -42,13 +47,11 @@ export function saveSettings(next: Settings): Settings {
   const file = settingsPath();
   mkdirSync(dirname(file), { recursive: true });
   lastWritten = JSON.stringify(cache, null, 2);
-  // write next to it first, so a crash never leaves half a file
   writeFileSync(file + '.tmp', lastWritten, 'utf8');
   renameSync(file + '.tmp', file);
   return cache;
 }
 
-/** Hand-edits to settings.json are picked up live, like Windows Terminal. */
 export function watchSettings(onChange: (s: Settings) => void) {
   const file = settingsPath();
   mkdirSync(dirname(file), { recursive: true });
@@ -65,8 +68,8 @@ export function watchSettings(onChange: (s: Settings) => void) {
           cache = sanitize(JSON.parse(text));
           lastWritten = text;
           onChange(cache);
-        } catch { /* half-saved or invalid JSON: wait for the next save */ }
+        } catch {}
       }, 150);
     });
-  } catch { /* watching is a nice-to-have */ }
+  } catch {}
 }

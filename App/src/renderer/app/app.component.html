@@ -1,4 +1,5 @@
 <header class="titlebar" [class.titlebar--light-active]="state.activeIsLight()">
+  <button class="brand" (click)="state.toggleOverlay('about')" [title]="'bar.about' | t" [attr.aria-label]="'bar.about' | t"><img src="assets/logo.svg" alt="" draggable="false"><span class="brand-word">DHTerminal</span></button>
   <div class="tabs" role="tablist" (dragover)="$event.preventDefault()" (drop)="drop($event)">
     @for (tab of state.tabs(); track tab.id; let i = $index) {
       @if (dropIndex() === i) { <span class="drop-mark"></span> }
@@ -14,18 +15,18 @@
           <app-profile-icon class="tab-icon" [icon]="state.tabProfile(tab)?.icon"></app-profile-icon>
         }
         @if (renaming() === tab.id) {
-          <input #renameInput class="tab-rename" [value]="state.tabTitle(tab)" (blur)="finishRename(tab, renameInput.value)" (keydown)="renameKey($event, tab)" (mousedown)="$event.stopPropagation()" aria-label="Tab title">
+          <input #renameInput class="tab-rename" [value]="state.tabTitle(tab)" (blur)="finishRename(tab, renameInput.value)" (keydown)="renameKey($event, tab)" (mousedown)="$event.stopPropagation()" [attr.aria-label]="'bar.tabTitle' | t">
         } @else {
           <span class="tab-title">{{ state.tabTitle(tab) }}</span>
         }
-        @if (state.tabPaneCount(tab) > 1) { <span class="tab-panes" title="Panes in this tab">{{ state.tabPaneCount(tab) }}</span> }
-        <button class="tab-close" (mousedown)="$event.stopPropagation()" (click)="state.closeTab(tab.id)" title="Close tab" aria-label="Close tab"><app-icon name="close"></app-icon></button>
+        @if (state.tabPaneCount(tab) > 1) { <span class="tab-panes" [title]="'bar.panes' | t">{{ state.tabPaneCount(tab) }}</span> }
+        <button class="tab-close" (mousedown)="$event.stopPropagation()" (click)="state.closeTab(tab.id)" [title]="'bar.closeTab' | t" [attr.aria-label]="'bar.closeTab' | t"><app-icon name="close"></app-icon></button>
       </div>
     }
     @if (dropIndex() === state.tabs().length) { <span class="drop-mark"></span> }
     <div class="new-tab">
-      <button class="new-tab-btn" (click)="state.newTab()" title="New tab (Ctrl+Shift+T)" aria-label="New tab"><app-icon name="plus"></app-icon></button>
-      <button class="new-tab-btn new-tab-btn--chevron" (click)="toggleMenu($event)" [attr.aria-expanded]="state.menuOpen()" title="Open a profile (Ctrl+Shift+Space)" aria-label="Choose a profile" aria-haspopup="menu"><app-icon name="chevron"></app-icon></button>
+      <button class="new-tab-btn" (click)="state.newTab()" [title]="'bar.newTab' | t" [attr.aria-label]="'bar.newTabLabel' | t"><app-icon name="plus"></app-icon></button>
+      <button class="new-tab-btn new-tab-btn--chevron" (click)="toggleMenu($event)" [attr.aria-expanded]="state.menuOpen()" [title]="'bar.chooseProfile' | t" [attr.aria-label]="'bar.chooseProfileLabel' | t" aria-haspopup="menu"><app-icon name="chevron"></app-icon></button>
       @if (state.menuOpen()) {
         <div class="menu menu--profiles" role="menu" (keydown)="menuKey($event)">
           @for (p of state.visibleProfiles(); track p.id; let i = $index) {
@@ -36,14 +37,22 @@
             </button>
           }
           <div class="menu-sep"></div>
-          <button class="menu-item" role="menuitem" (click)="state.menuOpen.set(false); state.openSettings()"><app-icon class="menu-icon" name="gear"></app-icon><span class="menu-label">Settings</span><span class="menu-keys">Ctrl+,</span></button>
-          <button class="menu-item" role="menuitem" (click)="state.toggleOverlay('palette')"><app-icon class="menu-icon" name="bolt"></app-icon><span class="menu-label">Command palette</span><span class="menu-keys">Ctrl+Shift+P</span></button>
-          <button class="menu-item" role="menuitem" (click)="state.toggleOverlay('about')"><app-icon class="menu-icon" name="help"></app-icon><span class="menu-label">About</span><span class="menu-keys"></span></button>
-          <p class="menu-hint">Alt+click to split · Shift+click for a new window</p>
+          <button class="menu-item" role="menuitem" (click)="state.menuOpen.set(false); state.openSettings()"><app-icon class="menu-icon" name="gear"></app-icon><span class="menu-label">{{ 'common.settings' | t }}</span><span class="menu-keys">Ctrl+,</span></button>
+          <button class="menu-item" role="menuitem" (click)="state.toggleOverlay('palette')"><app-icon class="menu-icon" name="bolt"></app-icon><span class="menu-label">{{ 'menu.palette' | t }}</span><span class="menu-keys">Ctrl+Shift+P</span></button>
+          <button class="menu-item" role="menuitem" (click)="state.menuOpen.set(false); lock.lock()"><app-icon class="menu-icon" name="lock"></app-icon><span class="menu-label">{{ 'common.lock' | t }}</span><span class="menu-keys">Ctrl+Shift+L</span></button>
+          <button class="menu-item" role="menuitem" (click)="state.toggleOverlay('about')"><app-icon class="menu-icon" name="help"></app-icon><span class="menu-label">{{ 'common.about' | t }}</span><span class="menu-keys"></span></button>
+          <p class="menu-hint">{{ 'menu.hint' | t }}</p>
         </div>
       }
     </div>
     <div class="drag-space"></div>
+  </div>
+  <div class="bar-tools">
+    <select class="bar-lang" [value]="state.settings().language" (change)="state.saveSettings({ language: $any($event.target).value })" [attr.aria-label]="'bar.language' | t" [title]="'bar.language' | t">
+      <option value="nl" [selected]="state.settings().language === 'nl'">NL</option>
+      <option value="en" [selected]="state.settings().language === 'en'">EN</option>
+    </select>
+    <button class="bar-btn" (click)="state.toggleTheme()" [title]="(state.dark() ? 'bar.lightMode' : 'bar.darkMode') | t" [attr.aria-label]="(state.dark() ? 'bar.lightMode' : 'bar.darkMode') | t"><app-icon [name]="state.dark() ? 'sun' : 'moon'"></app-icon></button>
   </div>
 </header>
 
@@ -58,45 +67,45 @@
     </section>
   }
   @if (!state.tabs().length) {
-    <div class="loading"><img src="assets/icon-256.png" alt="" width="72" height="72"></div>
+    <div class="loading"><img src="assets/logo.svg" alt="" draggable="false"><span class="spinner"></span></div>
   }
 </main>
 
 @if (tabMenu(); as m) {
   <div class="menu menu--floating" role="menu" [style.left.px]="clampX(m.x)" [style.top.px]="clampY(m.y, 7)">
     @if (m.tab.kind === 'terminal') {
-      <button class="menu-item" role="menuitem" (click)="startRename(m.tab)"><app-icon class="menu-icon" name="edit"></app-icon><span class="menu-label">Rename tab</span></button>
-      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.duplicateTab()"><app-icon class="menu-icon" name="copy"></app-icon><span class="menu-label">Duplicate tab</span><span class="menu-keys">Ctrl+Shift+D</span></button>
-      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.split('row')"><app-icon class="menu-icon" name="splitRight"></app-icon><span class="menu-label">Split right</span><span class="menu-keys">Alt+Shift++</span></button>
-      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.split('column')"><app-icon class="menu-icon" name="splitDown"></app-icon><span class="menu-label">Split down</span><span class="menu-keys">Alt+Shift+-</span></button>
+      <button class="menu-item" role="menuitem" (click)="startRename(m.tab)"><app-icon class="menu-icon" name="edit"></app-icon><span class="menu-label">{{ 'menu.rename' | t }}</span></button>
+      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.duplicateTab()"><app-icon class="menu-icon" name="copy"></app-icon><span class="menu-label">{{ 'menu.duplicate' | t }}</span><span class="menu-keys">Ctrl+Shift+D</span></button>
+      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.split('row')"><app-icon class="menu-icon" name="splitRight"></app-icon><span class="menu-label">{{ 'menu.splitRight' | t }}</span><span class="menu-keys">Alt+Shift++</span></button>
+      <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.split('column')"><app-icon class="menu-icon" name="splitDown"></app-icon><span class="menu-label">{{ 'menu.splitDown' | t }}</span><span class="menu-keys">Alt+Shift+-</span></button>
       <div class="menu-sep"></div>
     }
-    <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.closeOtherTabs(m.tab.id)"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">Close other tabs</span></button>
-    <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.closeTab(m.tab.id)"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">Close tab</span></button>
+    <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.closeOtherTabs(m.tab.id)"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">{{ 'menu.closeOthers' | t }}</span></button>
+    <button class="menu-item" role="menuitem" (click)="tabMenu.set(null); state.closeTab(m.tab.id)"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">{{ 'menu.closeTab' | t }}</span></button>
   </div>
 }
 
 @if (contextMenu(); as m) {
   <div class="overlay overlay--clear" (mousedown)="state.closeOverlay()" (contextmenu)="$event.preventDefault(); state.closeOverlay()"></div>
   <div class="menu menu--floating" role="menu" [style.left.px]="clampX(m.x)" [style.top.px]="clampY(m.y, 8)">
-    <button class="menu-item" role="menuitem" [disabled]="!m.session.term.hasSelection()" (click)="ctx('copy')"><app-icon class="menu-icon" name="copy"></app-icon><span class="menu-label">Copy</span><span class="menu-keys">Ctrl+C</span></button>
-    <button class="menu-item" role="menuitem" (click)="ctx('paste')"><app-icon class="menu-icon" name="paste"></app-icon><span class="menu-label">Paste</span><span class="menu-keys">Ctrl+V</span></button>
-    <button class="menu-item" role="menuitem" (click)="ctx('selectAll')"><app-icon class="menu-icon" name="check"></app-icon><span class="menu-label">Select all</span></button>
+    <button class="menu-item" role="menuitem" [disabled]="!m.session.term.hasSelection()" (click)="ctx('copy')"><app-icon class="menu-icon" name="copy"></app-icon><span class="menu-label">{{ 'menu.copy' | t }}</span><span class="menu-keys">Ctrl+C</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('paste')"><app-icon class="menu-icon" name="paste"></app-icon><span class="menu-label">{{ 'menu.paste' | t }}</span><span class="menu-keys">Ctrl+V</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('selectAll')"><app-icon class="menu-icon" name="check"></app-icon><span class="menu-label">{{ 'menu.selectAll' | t }}</span></button>
     <div class="menu-sep"></div>
-    <button class="menu-item" role="menuitem" (click)="ctx('splitRight')"><app-icon class="menu-icon" name="splitRight"></app-icon><span class="menu-label">Split right</span><span class="menu-keys">Alt+Shift++</span></button>
-    <button class="menu-item" role="menuitem" (click)="ctx('splitDown')"><app-icon class="menu-icon" name="splitDown"></app-icon><span class="menu-label">Split down</span><span class="menu-keys">Alt+Shift+-</span></button>
-    <button class="menu-item" role="menuitem" (click)="ctx('find')"><app-icon class="menu-icon" name="search"></app-icon><span class="menu-label">Find</span><span class="menu-keys">Ctrl+Shift+F</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('splitRight')"><app-icon class="menu-icon" name="splitRight"></app-icon><span class="menu-label">{{ 'menu.splitRight' | t }}</span><span class="menu-keys">Alt+Shift++</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('splitDown')"><app-icon class="menu-icon" name="splitDown"></app-icon><span class="menu-label">{{ 'menu.splitDown' | t }}</span><span class="menu-keys">Alt+Shift+-</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('find')"><app-icon class="menu-icon" name="search"></app-icon><span class="menu-label">{{ 'menu.find' | t }}</span><span class="menu-keys">Ctrl+Shift+F</span></button>
     <div class="menu-sep"></div>
-    <button class="menu-item" role="menuitem" (click)="ctx('close')"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">Close pane</span><span class="menu-keys">Ctrl+Shift+W</span></button>
+    <button class="menu-item" role="menuitem" (click)="ctx('close')"><app-icon class="menu-icon" name="close"></app-icon><span class="menu-label">{{ 'menu.closePane' | t }}</span><span class="menu-keys">Ctrl+Shift+W</span></button>
   </div>
 }
 
 @if (state.overlay() === 'palette') {
   <div class="overlay overlay--top" (mousedown)="state.closeOverlay()">
-    <div class="palette" role="dialog" aria-label="Command palette" (mousedown)="$event.stopPropagation()">
+    <div class="palette" role="dialog" [attr.aria-label]="'palette.label' | t" (mousedown)="$event.stopPropagation()">
       <div class="palette-search">
         <app-icon name="bolt"></app-icon>
-        <input #paletteInput class="palette-input" placeholder="Type a command" [ngModel]="query()" (ngModelChange)="query.set($event); selected.set(0)" (keydown)="paletteKey($event)" spellcheck="false" aria-label="Command">
+        <input #paletteInput class="palette-input" [placeholder]="'palette.placeholder' | t" [ngModel]="query()" (ngModelChange)="query.set($event); selected.set(0)" (keydown)="paletteKey($event)" spellcheck="false" [attr.aria-label]="'palette.input' | t">
       </div>
       <div class="palette-list" role="listbox">
         @for (c of filtered(); track c.id; let i = $index) {
@@ -107,7 +116,7 @@
             @if (c.keys) { <kbd class="palette-keys">{{ c.keys }}</kbd> }
           </button>
         } @empty {
-          <p class="palette-empty">No matching commands</p>
+          <p class="palette-empty">{{ 'palette.empty' | t }}</p>
         }
       </div>
     </div>
@@ -116,26 +125,30 @@
 
 @if (state.overlay() === 'about') {
   <div class="overlay" (mousedown)="state.closeOverlay()">
-    <div class="dialog dialog--about" role="dialog" aria-label="About DHTerminal" (mousedown)="$event.stopPropagation()">
-      <img src="assets/icon-256.png" alt="" width="72" height="72">
-      <h2 class="dialog-title">DHTerminal</h2>
-      <p class="dialog-text">Version {{ state.info()?.version }}</p>
-      <p class="dialog-text">Every shell on your PC in one window: PowerShell, Command Prompt, every WSL distro, Git Bash, Visual Studio and more.</p>
-      <p class="dialog-text dialog-text--muted">Made by Elias De Hondt · <a href="#" (click)="$event.preventDefault(); openLink('https://eliasdh.com')">eliasdh.com</a></p>
-      <div class="dialog-actions"><button class="btn btn--primary" (click)="state.closeOverlay()" autofocus>Close</button></div>
+    <div class="dialog dialog--about" role="dialog" [attr.aria-label]="'bar.about' | t" (mousedown)="$event.stopPropagation()">
+      <img src="assets/logo.svg" alt="" width="72" height="72" draggable="false">
+      <h2 class="dialog-title dialog-title--brand">DHTerminal</h2>
+      <p class="dialog-text">{{ 'about.version' | t: { v: state.info()?.version ?? '' } }}</p>
+      <p class="dialog-text">{{ 'about.text' | t }}</p>
+      <p class="dialog-text dialog-text--muted">{{ 'about.madeBy' | t }} · <a href="#" (click)="$event.preventDefault(); openLink('https://eliasdh.com')">eliasdh.com</a></p>
+      <div class="dialog-actions"><button class="btn btn--primary" (click)="state.closeOverlay()" autofocus>{{ 'common.close' | t }}</button></div>
     </div>
   </div>
 }
 
 @if (confirmCount()) {
   <div class="overlay">
-    <div class="dialog" role="alertdialog" aria-label="Close all tabs?">
-      <h2 class="dialog-title">Close all tabs?</h2>
-      <p class="dialog-text">You're about to close {{ confirmCount() }} {{ state.tabs().length > 1 ? 'tabs' : 'panes' }}. The shells running in them will be stopped.</p>
+    <div class="dialog" role="alertdialog" [attr.aria-label]="'confirm.title' | t">
+      <h2 class="dialog-title">{{ 'confirm.title' | t }}</h2>
+      <p class="dialog-text">{{ (state.tabs().length > 1 ? 'confirm.tabs' : 'confirm.panes') | t: { n: confirmCount() } }}</p>
       <div class="dialog-actions">
-        <button class="btn" (click)="state.closeOverlay()">Cancel</button>
-        <button class="btn btn--primary" (click)="confirmClose()" autofocus>Close all</button>
+        <button class="btn" (click)="state.closeOverlay()">{{ 'common.cancel' | t }}</button>
+        <button class="btn btn--primary" (click)="confirmClose()" autofocus>{{ 'confirm.action' | t }}</button>
       </div>
     </div>
   </div>
+}
+
+@if (lock.mode() !== 'unlocked' && lock.mode() !== 'checking') {
+  <app-lock-screen></app-lock-screen>
 }

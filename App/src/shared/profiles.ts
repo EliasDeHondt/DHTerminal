@@ -1,6 +1,5 @@
 import { Profile, Settings } from './types';
 
-/** Splits `"C:\a b\x.exe" -i -l` into the program and the raw argument string, exactly as Windows would. */
 export function splitCommandline(commandline: string): { file: string; args: string } {
   const s = commandline.trim();
   if (!s) return { file: '', args: '' };
@@ -13,14 +12,12 @@ export function splitCommandline(commandline: string): { file: string; args: str
   return { file: m[1], args: m[2] };
 }
 
-/** Expands `%USERPROFILE%`-style variables; unknown ones are left as they are (like cmd.exe). */
 export function expandEnv(value: string, env: Record<string, string | undefined>): string {
   const lower: Record<string, string | undefined> = {};
   for (const k of Object.keys(env)) lower[k.toLowerCase()] = env[k];
   return value.replace(/%([^%\s]+)%/g, (all, name: string) => lower[name.toLowerCase()] ?? all);
 }
 
-/** Picks a built-in icon from what a profile runs, for profiles that come without one. */
 export function guessIcon(p: Pick<Profile, 'name' | 'commandline' | 'wslDistro'>): string {
   const distro = p.wslDistro ?? /wsl(?:\.exe)?"?\s+(?:.*\s)?(?:-d|--distribution)\s+"?([^"\s]+)/i.exec(p.commandline)?.[1];
   if (distro) return 'builtin:' + distroIcon(distro);
@@ -51,7 +48,6 @@ export function distroIcon(distro: string): string {
   return hit ?? 'linux';
 }
 
-/** The profile list the window shows: detected + custom, with your edits, in your order, duplicates dropped. */
 export function mergeProfiles(detected: Profile[], settings: Pick<Settings, 'profileOverrides' | 'customProfiles' | 'profileOrder'>): Profile[] {
   const seen = new Set<string>();
   const out: Profile[] = [];
@@ -70,7 +66,6 @@ export function mergeProfiles(detected: Profile[], settings: Pick<Settings, 'pro
   return out;
 }
 
-/** Same name and same command = the same shell (Windows Terminal often lists a distro twice). */
 export function dedupeKey(p: Pick<Profile, 'name' | 'commandline' | 'wslDistro' | 'env'>): string {
   if (p.wslDistro) return 'wsl:' + p.wslDistro.toLowerCase();
   const wsl = /wsl(?:\.exe)?"?\s+(?:-d|--distribution)\s+"?([^"\s]+)/i.exec(p.commandline);

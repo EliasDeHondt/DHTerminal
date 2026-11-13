@@ -1,4 +1,4 @@
-import { AppInfo, DetectResult, Settings, SpawnRequest } from '../../shared/types';
+import { AppInfo, DetectResult, LockStatus, Settings, SpawnRequest, UnlockResult } from '../../shared/types';
 
 interface Api {
   invoke(channel: string, ...args: unknown[]): Promise<any>;
@@ -8,7 +8,6 @@ interface Api {
 
 const api: Api = (window as any).dhterminal;
 
-/** Typed access to the main process (see src/preload/preload.ts). */
 export const bridge = {
   info: (): Promise<AppInfo> => api.invoke('app:info'),
   detect: (force = false): Promise<DetectResult> => api.invoke('profiles:detect', force),
@@ -29,5 +28,12 @@ export const bridge = {
   closeWindow: () => api.send('window:close'),
   toggleFullscreen: () => api.send('window:fullscreen'),
   setChrome: (dark: boolean, mica: boolean) => api.send('window:chrome', dark, mica),
+  lockStatus: (): Promise<LockStatus> => api.invoke('lock:status'),
+  setupPin: (pin: string): Promise<UnlockResult> => api.invoke('lock:setup', pin),
+  unlock: (pin: string): Promise<UnlockResult> => api.invoke('lock:unlock', pin),
+  verifyPin: (pin: string): Promise<UnlockResult> => api.invoke('lock:verify', pin),
+  changePin: (current: string, next: string): Promise<UnlockResult> => api.invoke('lock:change', current, next),
+  lock: () => api.send('lock:lock'),
+  activity: () => api.send('lock:activity'),
   on: (channel: string, listener: (payload: any) => void) => api.on(channel, listener),
 };

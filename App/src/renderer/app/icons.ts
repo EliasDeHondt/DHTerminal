@@ -1,4 +1,3 @@
-// Built-in artwork. Shell icons are full-colour 24×24 SVGs; UI icons use currentColor.
 
 const badge = (fill: string, letter: string, round = false) =>
   `${round ? `<circle cx="12" cy="12" r="10.5" fill="${fill}"/>` : `<rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="${fill}"/>`}<text x="12" y="16.6" text-anchor="middle" font-size="${letter.length > 1 ? 10 : 13}" font-weight="700" fill="#fff" font-family="Segoe UI Variable Display, Segoe UI, sans-serif">${letter}</text>`;
@@ -78,4 +77,10 @@ export const UI_ICONS: Record<string, string> = {
   eye: `<circle cx="12" cy="12" r="3" fill="none" stroke="currentColor" stroke-width="1.6"/>${s('M2.5 12S6 5.5 12 5.5 21.5 12 21.5 12 18 18.5 12 18.5 2.5 12 2.5 12z')}`,
   eyeOff: s('M3 3l18 18M10.6 6c.5-.1.9-.1 1.4-.1 6 0 9.5 6.1 9.5 6.1a17 17 0 0 1-2.7 3.4M6.4 6.9A16.5 16.5 0 0 0 2.5 12S6 18.5 12 18.5c1.7 0 3.2-.5 4.5-1.2M9.9 9.9a3 3 0 0 0 4.2 4.2'),
   star: s('M12 3.5l2.6 5.4 5.9.8-4.3 4.1 1 5.8L12 16.8l-5.2 2.8 1-5.8-4.3-4.1 5.9-.8z'),
+  sun: s('M12 16.5a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9zM12 2.5v2M12 19.5v2M4.6 4.6l1.4 1.4M18 18l1.4 1.4M2.5 12h2M19.5 12h2M4.6 19.4L6 18M18 6l1.4-1.4'),
+  moon: s('M20.5 13.2A8.5 8.5 0 1 1 10.8 3.5a6.6 6.6 0 0 0 9.7 9.7z'),
+  globe: s('M12 21.5a9.5 9.5 0 1 0 0-19 9.5 9.5 0 0 0 0 19zM2.5 12h19M12 2.5c2.5 2.6 3.8 5.8 3.8 9.5s-1.3 6.9-3.8 9.5c-2.5-2.6-3.8-5.8-3.8-9.5S9.5 5.1 12 2.5z'),
+  lock: s('M6.5 10.5h11a1.5 1.5 0 0 1 1.5 1.5v7a1.5 1.5 0 0 1-1.5 1.5h-11A1.5 1.5 0 0 1 5 19v-7a1.5 1.5 0 0 1 1.5-1.5zM8 10.5V7.5a4 4 0 0 1 8 0v3M12 14.5v2'),
+  key: s('M14.5 4a5.5 5.5 0 1 1-4.9 8L4 17.6V20h2.4v-1.6H8V16.8h1.6l2.2-2.2A5.5 5.5 0 0 1 14.5 4zM16 7.5h.01'),
+  backspace: s('M9 5.5h10a1.5 1.5 0 0 1 1.5 1.5v10a1.5 1.5 0 0 1-1.5 1.5H9L3.5 12zM11.5 9.5l5 5M16.5 9.5l-5 5'),
 };
