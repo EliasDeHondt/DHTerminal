@@ -86,4 +86,6 @@ app-pane, :host ::ng-deep .pane { display: flex; flex: 1; min-width: 0; min-heig
 .palette-label { flex: 1; min-width: 0; overflow: hidden; white-space: nowrap; text-overflow: ellipsis; }
 .palette-empty { margin: 0; padding: 16px; color: var(--muted); text-align: center; }
 
-.dialog-title--brand { color: var(--title); font-size: 22px; }
+.dialog-title--brand { color: var(--title); font-size: 30px; letter-spacing: 0.04em; }
+.dialog-by { margin: 0; font-size: 15px; }
+.by { color: var(--title); }

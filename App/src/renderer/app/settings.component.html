@@ -4,6 +4,7 @@
   <button class="nav-item" [class.nav-item--on]="section() === 'schemes'" (click)="go('schemes')"><app-icon name="swatch"></app-icon>{{ 'nav.schemes' | t }}</button>
   <button class="nav-item" [class.nav-item--on]="section() === 'interaction'" (click)="go('interaction')"><app-icon name="pointer"></app-icon>{{ 'nav.interaction' | t }}</button>
   <button class="nav-item" [class.nav-item--on]="section() === 'security'" (click)="go('security')"><app-icon name="lock"></app-icon>{{ 'nav.security' | t }}</button>
+  <button class="nav-item" [class.nav-item--on]="section() === 'about'" (click)="go('about')"><app-icon name="help"></app-icon>{{ 'nav.about' | t }}</button>
   <p class="nav-heading">{{ 'nav.profiles' | t }}</p>
   @for (p of state.profiles(); track p.id) {
     <button class="nav-item nav-item--profile" [class.nav-item--on]="state.settingsProfile() === p.id" [class.nav-item--hidden]="p.hidden" (click)="openProfile(p)">
@@ -232,6 +233,19 @@
             <span class="row-text"><span class="row-title">{{ 'sec.pin' | t }}</span><span class="row-sub">{{ 'sec.pinSub' | t }}</span></span>
             <button class="btn" (click)="lock.beginChange()"><app-icon name="key"></app-icon>{{ 'sec.change' | t }}</button>
           </div>
+        </div>
+      }
+      @case ('about') {
+        <div class="about">
+          <img class="about-logo" src="assets/logo.svg" alt="" draggable="false">
+          <h1 class="about-title">DHTerminal</h1>
+          <p class="about-by">{{ 'about.by' | t }} <b class="by">Elias De Hondt</b></p>
+          <p class="about-text">{{ 'about.text' | t }}</p>
+          <dl class="about-meta">
+            <dt>{{ 'about.versionLabel' | t }}</dt><dd>{{ state.info()?.version }}</dd>
+            <dt>{{ 'startup.file' | t }}</dt><dd>{{ state.info()?.settingsPath }}</dd>
+            <dt>Website</dt><dd><a href="#" (click)="$event.preventDefault(); openSite()">eliasdh.com</a></dd>
+          </dl>
         </div>
       }
     }

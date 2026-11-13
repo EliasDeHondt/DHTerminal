@@ -45,7 +45,8 @@ const en = {
 
   'about.version': 'Version {v}',
   'about.text': 'Every shell on your PC in one window: PowerShell, Command Prompt, every WSL distro, Git Bash, Visual Studio and more.',
-  'about.madeBy': 'Made by Elias De Hondt',
+  'about.by': 'Made by',
+  'about.versionLabel': 'Version',
 
   'confirm.title': 'Close all tabs?',
   'confirm.tabs': "You're about to close {n} tabs. The shells running in them will be stopped.",
@@ -121,6 +122,7 @@ const en = {
   'nav.schemes': 'Color schemes',
   'nav.interaction': 'Interaction',
   'nav.security': 'Security',
+  'nav.about': 'About',
   'nav.profiles': 'Profiles',
   'nav.addProfile': 'Add a new profile',
   'nav.openJson': 'Open JSON file',
@@ -274,7 +276,8 @@ const nl: Record<TextKey, string> = {
 
   'about.version': 'Versie {v}',
   'about.text': 'Elke shell op je pc in één venster: PowerShell, Opdrachtprompt, elke WSL-distro, Git Bash, Visual Studio en meer.',
-  'about.madeBy': 'Gemaakt door Elias De Hondt',
+  'about.by': 'Gemaakt door',
+  'about.versionLabel': 'Versie',
 
   'confirm.title': 'Alle tabbladen sluiten?',
   'confirm.tabs': 'Je staat op het punt {n} tabbladen te sluiten. De shells die erin draaien worden gestopt.',
@@ -350,6 +353,7 @@ const nl: Record<TextKey, string> = {
   'nav.schemes': 'Kleurenschema\'s',
   'nav.interaction': 'Interactie',
   'nav.security': 'Beveiliging',
+  'nav.about': 'Over',
   'nav.profiles': 'Profielen',
   'nav.addProfile': 'Nieuw profiel toevoegen',
   'nav.openJson': 'JSON-bestand openen',
