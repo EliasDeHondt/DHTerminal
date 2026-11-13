@@ -129,7 +129,6 @@
       <h2 class="dialog-title dialog-title--brand">DHTerminal</h2>
       <p class="dialog-by">{{ 'about.by' | t }} <b class="by">Elias De Hondt</b></p>
       <p class="dialog-text dialog-text--muted">{{ 'about.version' | t: { v: state.info()?.version ?? '' } }}</p>
-      <p class="dialog-text">{{ 'about.text' | t }}</p>
       <p class="dialog-text"><a href="#" (click)="$event.preventDefault(); openLink('https://eliasdh.com')">eliasdh.com</a></p>
       <div class="dialog-actions"><button class="btn btn--primary" (click)="state.closeOverlay()" autofocus>{{ 'common.close' | t }}</button></div>
     </div>

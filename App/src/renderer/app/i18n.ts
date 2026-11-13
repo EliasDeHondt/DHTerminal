@@ -44,7 +44,6 @@ const en = {
   'palette.empty': 'No matching commands',
 
   'about.version': 'Version {v}',
-  'about.text': 'Every shell on your PC in one window: PowerShell, Command Prompt, every WSL distro, Git Bash, Visual Studio and more.',
   'about.by': 'Made by',
   'about.versionLabel': 'Version',
 
@@ -275,7 +274,6 @@ const nl: Record<TextKey, string> = {
   'palette.empty': 'Geen opdrachten gevonden',
 
   'about.version': 'Versie {v}',
-  'about.text': 'Elke shell op je pc in één venster: PowerShell, Opdrachtprompt, elke WSL-distro, Git Bash, Visual Studio en meer.',
   'about.by': 'Gemaakt door',
   'about.versionLabel': 'Versie',
 
