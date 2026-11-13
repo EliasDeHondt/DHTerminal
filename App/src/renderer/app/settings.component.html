@@ -1,0 +1,229 @@
+<nav class="nav" aria-label="Settings">
+  <button class="nav-item" [class.nav-item--on]="section() === 'startup'" (click)="go('startup')"><app-icon name="rocket"></app-icon>Startup</button>
+  <button class="nav-item" [class.nav-item--on]="section() === 'appearance'" (click)="go('appearance')"><app-icon name="brush"></app-icon>Appearance</button>
+  <button class="nav-item" [class.nav-item--on]="section() === 'schemes'" (click)="go('schemes')"><app-icon name="swatch"></app-icon>Color schemes</button>
+  <button class="nav-item" [class.nav-item--on]="section() === 'interaction'" (click)="go('interaction')"><app-icon name="pointer"></app-icon>Interaction</button>
+  <p class="nav-heading">Profiles</p>
+  @for (p of state.profiles(); track p.id) {
+    <button class="nav-item nav-item--profile" [class.nav-item--on]="state.settingsProfile() === p.id" [class.nav-item--hidden]="p.hidden" (click)="openProfile(p)">
+      <app-profile-icon [icon]="p.icon"></app-profile-icon><span class="nav-text">{{ p.name }}</span>
+    </button>
+  }
+  <button class="nav-item nav-item--add" (click)="addProfile()"><app-icon name="plus"></app-icon>Add a new profile</button>
+  <div class="nav-foot">
+    <button class="nav-item" (click)="openJson()"><app-icon name="external"></app-icon>Open JSON file</button>
+  </div>
+</nav>
+
+<div class="page">
+  @if (editing(); as p) {
+    <header class="page-head">
+      <app-profile-icon class="page-icon" [icon]="p.icon"></app-profile-icon>
+      <div>
+        <h1 class="page-title">{{ p.name }}</h1>
+        <p class="page-sub">{{ sourceLabel(p) }}</p>
+      </div>
+    </header>
+
+    <div class="actions">
+      <button class="btn btn--primary" (click)="state.newTab(p)"><app-icon name="plus"></app-icon>Open in a new tab</button>
+      @if (s().defaultProfile !== p.id && state.defaultProfile().id !== p.id) { <button class="btn" (click)="set('defaultProfile', p.id)"><app-icon name="star"></app-icon>Make default</button> }
+      @else { <span class="tag">Default profile</span> }
+      <button class="btn" (click)="duplicate(p)"><app-icon name="copy"></app-icon>Duplicate</button>
+      <button class="btn btn--icon" (click)="move(p, -1)" title="Move up in the list" aria-label="Move up"><app-icon name="up"></app-icon></button>
+      <button class="btn btn--icon" (click)="move(p, 1)" title="Move down in the list" aria-label="Move down"><app-icon name="down"></app-icon></button>
+      @if (p.source === 'custom') { <button class="btn btn--danger" (click)="deleteProfile(p)"><app-icon name="trash"></app-icon>Delete</button> }
+      @if (isOverridden(p)) { <button class="btn" (click)="resetProfile(p)"><app-icon name="reset"></app-icon>Reset to detected</button> }
+    </div>
+
+    <div class="card">
+      <label class="row">
+        <span class="row-text"><span class="row-title">Name</span></span>
+        <input class="input" [value]="p.name" (change)="update(p, { name: $any($event.target).value.trim() || p.name })">
+      </label>
+      <label class="row">
+        <span class="row-text"><span class="row-title">Command line</span><span class="row-sub">The program and its arguments, like in Windows Terminal.</span></span>
+        <input class="input input--mono" [value]="p.commandline" (change)="update(p, { commandline: $any($event.target).value.trim() || p.commandline })" spellcheck="false">
+      </label>
+      <div class="row">
+        <span class="row-text"><span class="row-title">Starting directory</span><span class="row-sub">~ is your home folder. %VARIABLES% work.@if (p.wslDistro) { For WSL, a Linux path like /home/you also works.}</span></span>
+        <div class="row-input">
+          <input class="input input--mono" [value]="p.startingDirectory ?? ''" placeholder="~" (change)="update(p, { startingDirectory: $any($event.target).value.trim() })" spellcheck="false" aria-label="Starting directory">
+          <button class="btn btn--icon" (click)="pickFolder(p)" title="Browse" aria-label="Browse for a folder"><app-icon name="folder"></app-icon></button>
+        </div>
+      </div>
+      <div class="row row--top">
+        <span class="row-text"><span class="row-title">Icon</span><span class="row-sub">Pick one, use an emoji, or choose an image file.</span></span>
+        <div class="icon-picker">
+          @for (name of iconNames; track name) {
+            <button class="icon-choice" [class.icon-choice--on]="p.icon === 'builtin:' + name" (click)="update(p, { icon: 'builtin:' + name })" [title]="name" [attr.aria-label]="name"><app-profile-icon [icon]="'builtin:' + name"></app-profile-icon></button>
+          }
+          <div class="row-input">
+            <input class="input" [value]="p.icon?.startsWith('builtin:') ? '' : p.icon ?? ''" placeholder="Emoji or file path" (change)="update(p, { icon: $any($event.target).value.trim() || undefined })" aria-label="Icon emoji or path">
+            <button class="btn btn--icon" (click)="pickIcon(p)" title="Choose an image" aria-label="Choose an image"><app-icon name="folder"></app-icon></button>
+          </div>
+        </div>
+      </div>
+      <label class="row">
+        <span class="row-text"><span class="row-title">Color scheme</span></span>
+        <select class="select" [value]="p.colorScheme ?? ''" (change)="update(p, { colorScheme: $any($event.target).value || undefined })">
+          <option value="">Use the default ({{ s().colorScheme }})</option>
+          @for (sc of state.schemes(); track sc.name) { <option [value]="sc.name" [selected]="sc.name === p.colorScheme">{{ sc.name }}</option> }
+        </select>
+      </label>
+      <div class="row">
+        <span class="row-text"><span class="row-title">Tab color</span><span class="row-sub">A coloured line on the tab.</span></span>
+        <div class="row-input row-input--auto">
+          <input type="color" class="color" [value]="p.tabColor || '#4f94f0'" (change)="update(p, { tabColor: $any($event.target).value })" aria-label="Tab color">
+          @if (p.tabColor) { <button class="btn" (click)="update(p, { tabColor: undefined })">None</button> }
+        </div>
+      </div>
+      <label class="row">
+        <span class="row-text"><span class="row-title">Hide from the dropdown</span><span class="row-sub">The profile stays here in settings.</span></span>
+        <input type="checkbox" class="switch" [checked]="!!p.hidden" (change)="update(p, { hidden: $any($event.target).checked })">
+      </label>
+    </div>
+  } @else {
+    @switch (section()) {
+      @case ('startup') {
+        <h1 class="page-title">Startup</h1>
+        <div class="card">
+          <label class="row">
+            <span class="row-text"><span class="row-title">Default profile</span><span class="row-sub">Opens with the app, the + button and Ctrl+Shift+T.</span></span>
+            <select class="select" (change)="set('defaultProfile', $any($event.target).value)">
+              @for (p of state.profiles(); track p.id) { <option [value]="p.id" [selected]="p.id === state.defaultProfile().id">{{ p.name }}</option> }
+            </select>
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">Use my Windows Terminal profiles and color schemes</span><span class="row-sub">Your own profiles (like a psql shortcut) and schemes are read from Windows Terminal's settings.</span></span>
+            <input type="checkbox" class="switch" [checked]="s().importWindowsTerminal" (change)="set('importWindowsTerminal', $any($event.target).checked)">
+          </label>
+          <div class="row">
+            <span class="row-text"><span class="row-title">Shells on this PC</span><span class="row-sub">{{ state.profiles().length }} found: Windows shells, WSL distros, Git Bash, MSYS2, Visual Studio, SSH hosts and more. Installed a new one?</span></span>
+            <button class="btn" (click)="redetect()"><app-icon name="refresh"></app-icon>Search again</button>
+          </div>
+          <div class="row">
+            <span class="row-text"><span class="row-title">Settings file</span><span class="row-sub mono">{{ state.info()?.settingsPath }}</span></span>
+            <button class="btn" (click)="openJson()"><app-icon name="external"></app-icon>Open</button>
+          </div>
+        </div>
+      }
+      @case ('appearance') {
+        <h1 class="page-title">Appearance</h1>
+        <div class="card">
+          <label class="row">
+            <span class="row-text"><span class="row-title">App theme</span><span class="row-sub">The tab bar, menus and settings.</span></span>
+            <select class="select" (change)="set('theme', $any($event.target).value)">
+              <option value="system" [selected]="s().theme === 'system'">Use Windows setting</option>
+              <option value="dark" [selected]="s().theme === 'dark'">Dark</option>
+              <option value="light" [selected]="s().theme === 'light'">Light</option>
+            </select>
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">Mica background</span><span class="row-sub">The Windows 11 material behind the tab bar. Applies to new windows.</span></span>
+            <input type="checkbox" class="switch" [checked]="s().mica" (change)="set('mica', $any($event.target).checked)">
+          </label>
+        </div>
+        <h2 class="page-h2">Text</h2>
+        <div class="card">
+          <label class="row">
+            <span class="row-text"><span class="row-title">Font</span></span>
+            <input class="input" list="fonts" [value]="fontName()" (change)="setFont($any($event.target).value)">
+            <datalist id="fonts">@for (f of fonts; track f) { <option [value]="f"></option> }</datalist>
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">Font size</span><span class="row-sub">Ctrl+= and Ctrl+- zoom one pane; Ctrl+0 resets it.</span></span>
+            <input class="input input--num" type="number" min="6" max="48" [value]="s().fontSize" (change)="num('fontSize', $any($event.target).value)">
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">Line height</span></span>
+            <input class="input input--num" type="number" min="1" max="2" step="0.05" [value]="s().lineHeight" (change)="num('lineHeight', $any($event.target).value)">
+          </label>
+        </div>
+        <h2 class="page-h2">Cursor</h2>
+        <div class="card">
+          <label class="row">
+            <span class="row-text"><span class="row-title">Cursor shape</span></span>
+            <select class="select" (change)="set('cursorStyle', $any($event.target).value)">
+              <option value="bar" [selected]="s().cursorStyle === 'bar'">Bar ( ┃ )</option>
+              <option value="block" [selected]="s().cursorStyle === 'block'">Block ( █ )</option>
+              <option value="underline" [selected]="s().cursorStyle === 'underline'">Underline ( ▁ )</option>
+            </select>
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">Blinking cursor</span></span>
+            <input type="checkbox" class="switch" [checked]="s().cursorBlink" (change)="set('cursorBlink', $any($event.target).checked)">
+          </label>
+        </div>
+      }
+      @case ('schemes') {
+        <h1 class="page-title">Color schemes</h1>
+        <p class="page-sub">The default for every profile. A profile can pick its own on its page. Your Windows Terminal schemes show up here too; add more under "customSchemes" in the JSON file.</p>
+        <div class="schemes">
+          @for (sc of state.schemes(); track sc.name) {
+            <button class="scheme" [class.scheme--on]="sc.name === s().colorScheme" (click)="set('colorScheme', sc.name)" [style.background]="sc.background" [style.color]="sc.foreground">
+              <span class="scheme-name">{{ sc.name }}</span>
+              <span class="scheme-sample"><span [style.color]="sc.green">elias&#64;pc</span>:<span [style.color]="sc.blue">~</span>$ ls</span>
+              <span class="scheme-dots">@for (c of swatches(sc); track $index) { <span class="scheme-dot" [style.background]="c"></span> }</span>
+              @if (sc.name === s().colorScheme) { <app-icon class="scheme-check" name="check"></app-icon> }
+            </button>
+          }
+        </div>
+      }
+      @case ('interaction') {
+        <h1 class="page-title">Interaction</h1>
+        <div class="card">
+          <label class="row">
+            <span class="row-text"><span class="row-title">Copy on select</span><span class="row-sub">Selected text goes to the clipboard right away.</span></span>
+            <input type="checkbox" class="switch" [checked]="s().copyOnSelect" (change)="set('copyOnSelect', $any($event.target).checked)">
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">Right-click copies and pastes</span><span class="row-sub">Off: right-click shows a menu.</span></span>
+            <input type="checkbox" class="switch" [checked]="s().rightClickPaste" (change)="set('rightClickPaste', $any($event.target).checked)">
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">Ask before closing several tabs</span></span>
+            <input type="checkbox" class="switch" [checked]="s().confirmCloseTabs" (change)="set('confirmCloseTabs', $any($event.target).checked)">
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">When a shell exits</span></span>
+            <select class="select" (change)="set('closeOnExit', $any($event.target).value)">
+              <option value="graceful" [selected]="s().closeOnExit === 'graceful'">Close only when it ended without errors</option>
+              <option value="always" [selected]="s().closeOnExit === 'always'">Always close the pane</option>
+              <option value="never" [selected]="s().closeOnExit === 'never'">Keep the pane open</option>
+            </select>
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">Bell</span></span>
+            <select class="select" (change)="set('bell', $any($event.target).value)">
+              <option value="flash" [selected]="s().bell === 'flash'">Flash the pane</option>
+              <option value="none" [selected]="s().bell === 'none'">Nothing</option>
+            </select>
+          </label>
+          <label class="row">
+            <span class="row-text"><span class="row-title">Lines kept in history</span></span>
+            <input class="input input--num" type="number" min="0" max="200000" step="1000" [value]="s().scrollback" (change)="num('scrollback', $any($event.target).value)">
+          </label>
+        </div>
+        <h2 class="page-h2">Keyboard shortcuts</h2>
+        <div class="card keys">
+          <span>New tab</span><kbd>Ctrl+Shift+T</kbd>
+          <span>New tab with profile 1–9</span><kbd>Ctrl+Shift+1…9</kbd>
+          <span>Split pane (auto / right / down)</span><kbd>Alt+Shift+D · + · -</kbd>
+          <span>Move between panes</span><kbd>Alt+Arrow</kbd>
+          <span>Resize pane</span><kbd>Alt+Shift+Arrow</kbd>
+          <span>Close pane</span><kbd>Ctrl+Shift+W</kbd>
+          <span>Next / previous tab</span><kbd>Ctrl+Tab · Ctrl+Shift+Tab</kbd>
+          <span>Go to tab 1–9</span><kbd>Ctrl+Alt+1…9</kbd>
+          <span>Copy / paste</span><kbd>Ctrl+C · Ctrl+V</kbd>
+          <span>Find</span><kbd>Ctrl+Shift+F</kbd>
+          <span>Command palette</span><kbd>Ctrl+Shift+P</kbd>
+          <span>Open the profile menu</span><kbd>Ctrl+Shift+Space</kbd>
+          <span>New window</span><kbd>Ctrl+Shift+N</kbd>
+          <span>Full screen</span><kbd>F11 · Alt+Enter</kbd>
+          <span>Settings</span><kbd>Ctrl+,</kbd>
+        </div>
+      }
+    }
+  }
+</div>

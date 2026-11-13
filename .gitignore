@@ -1,0 +1,7 @@
+.vscode
+.claude
+App/node_modules
+App/dist
+App/release
+App/.angular
+*.log

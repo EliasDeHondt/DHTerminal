@@ -1,0 +1,40 @@
+appId: com.eliasdehondt.dhterminal
+productName: DHTerminal
+copyright: Copyright © Elias De Hondt
+directories:
+  output: release
+  buildResources: build
+files:
+  - dist/main/**/*
+  - dist/renderer/browser/**/*
+  - build/icon.png
+  - package.json
+# node-pty ships N-API prebuilds (ConPTY + OpenConsole), so nothing has to be compiled for Electron
+npmRebuild: false
+asar: true
+asarUnpack:
+  - node_modules/node-pty/**/*
+win:
+  # one file for users: the installer (it also updates an existing installation)
+  target:
+    - target: nsis
+      arch:
+        - x64
+  icon: build/icon.png
+  artifactName: ${productName}-Setup-v${version}.${ext}
+nsis:
+  oneClick: true
+  perMachine: false
+  runAfterFinish: true
+  deleteAppDataOnUninstall: false
+  createDesktopShortcut: always
+  createStartMenuShortcut: true
+  shortcutName: DHTerminal
+  uninstallDisplayName: DHTerminal
+  include: build/installer.nsh
+  differentialPackage: false
+  # the installer always speaks English
+  installerLanguages:
+    - en_US
+  language: '1033'
+  multiLanguageInstaller: false

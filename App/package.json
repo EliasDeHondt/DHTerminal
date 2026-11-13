@@ -1,0 +1,47 @@
+{
+  "name": "dhterminal",
+  "productName": "DHTerminal",
+  "version": "1.0.0",
+  "description": "DHTerminal, a modern tabbed terminal for Windows with every shell and WSL distro in one place, by Elias De Hondt.",
+  "author": "Elias De Hondt",
+  "license": "SEE LICENSE IN LICENSE.md",
+  "private": true,
+  "main": "dist/main/main/main.js",
+  "scripts": {
+    "build:main": "tsc -p tsconfig.main.json",
+    "build:renderer": "ng build",
+    "build": "npm run build:main && npm run build:renderer",
+    "start": "npm run build && electron .",
+    "electron": "electron .",
+    "watch:main": "tsc -p tsconfig.main.json --watch",
+    "watch:renderer": "ng build --watch --configuration development",
+    "dist": "npm run build && electron-builder --win",
+    "test": "npm run build:main && node --test --test-concurrency=1 \"test/**/*.test.js\""
+  },
+  "dependencies": {
+    "@angular/common": "^20.3.35",
+    "@angular/compiler": "^20.3.35",
+    "@angular/core": "^20.3.35",
+    "@angular/forms": "^20.3.35",
+    "@angular/platform-browser": "^20.3.35",
+    "@xterm/addon-fit": "^0.11.0",
+    "@xterm/addon-search": "^0.16.0",
+    "@xterm/addon-unicode11": "^0.9.0",
+    "@xterm/addon-web-links": "^0.12.0",
+    "@xterm/addon-webgl": "^0.19.0",
+    "@xterm/xterm": "^6.0.0",
+    "node-pty": "^1.1.0",
+    "rxjs": "~7.8.0",
+    "tslib": "^2.9.1",
+    "zone.js": "^0.15.1"
+  },
+  "devDependencies": {
+    "@angular-devkit/build-angular": "^20.3.43",
+    "@angular/cli": "^20.3.43",
+    "@angular/compiler-cli": "^20.3.35",
+    "@types/node": "^22.20.5",
+    "electron": "^45.3.2",
+    "electron-builder": "^26.18.0",
+    "typescript": "~5.9.3"
+  }
+}
