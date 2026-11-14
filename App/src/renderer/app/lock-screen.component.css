@@ -1,29 +1,30 @@
-:host { position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 56px 16px 16px; background-color: var(--chrome-solid); background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; -webkit-app-region: drag; animation: fade 0.2s ease-out; }
-.lock-box { -webkit-app-region: no-drag; position: relative; width: min(380px, 100%); padding: 30px 26px 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--surface); box-shadow: var(--shadow); text-align: center; overflow: hidden; outline: none; animation: pop 0.2s ease-out; }
-.lock-box::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--brand), var(--brand-2)); }
-.lock-brand { display: inline-flex; align-items: center; gap: 10px; }
+:host { --lk-page: #060709; --lk-box: #0d1016; --lk-field: #060709; --lk-primary: #0f54ae; --lk-muted: #818a92; --lk-ink: #86b6ff; --lk-tint: color-mix(in srgb, #0f54ae 22%, transparent); position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 56px 16px 16px; background-color: var(--lk-page); background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; -webkit-app-region: drag; animation: fade 0.2s ease-out; }
+:host-context([data-theme="light"]) { --lk-page: #f6f7f9; --lk-box: #ffffff; --lk-field: #f6f7f9; --lk-primary: #4f94f0; --lk-muted: #6c757d; --lk-ink: color-mix(in srgb, #4f94f0 78%, #0c0e11); --lk-tint: color-mix(in srgb, #4f94f0 12%, transparent); }
+.lock-box { -webkit-app-region: no-drag; position: relative; width: min(380px, 100%); padding: 30px 26px 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--lk-box); box-shadow: var(--shadow); text-align: center; overflow: hidden; outline: none; animation: pop 0.2s ease-out; }
+.lock-box::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--lk-primary); }
+.lock-brand { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .lock-logo { width: 40px; height: 40px; flex: none; }
-.lock-word { font-size: 25px; font-weight: 700; letter-spacing: 0.3px; color: var(--title); line-height: 1; }
+.lock-word { font-size: 24.8px; font-weight: 700; letter-spacing: 0.3px; color: var(--lk-primary); line-height: 1; }
 .lock-title { margin: 18px 0 4px; font-size: 18px; font-weight: 700; }
-.lock-sub { margin: 0; font-size: 13px; line-height: 1.5; color: var(--muted); }
-.lock-step { margin-top: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--title); }
+.lock-sub { margin: 0; font-size: 13px; line-height: 1.5; color: var(--lk-muted); }
+.lock-step { margin-top: 20px; font-size: 12px; font-weight: 700; letter-spacing: 0.4px; text-transform: uppercase; color: var(--lk-primary); }
 .lock-digits { display: flex; gap: 8px; justify-content: center; margin: 12px 0 10px; }
-.lock-digits span { display: grid; place-items: center; width: 34px; height: 44px; border: 1px solid var(--line); border-radius: 8px; background: var(--page-solid); color: var(--accent-ink); font-size: 22px; transition: border-color 0.15s, box-shadow 0.15s; }
-.lock-digits span.f { border-color: var(--accent); }
-.lock-digits span.cur { border-color: var(--accent); box-shadow: inset 0 -2px 0 var(--accent); }
-.lock-msg { min-height: 18px; font-size: 12.5px; color: var(--muted); }
+.lock-digits span { display: grid; place-items: center; width: 34px; height: 44px; border: 1px solid var(--line); border-radius: 8px; background: var(--lk-field); color: var(--lk-ink); font-size: 22px; transition: border-color 0.15s, box-shadow 0.15s; }
+.lock-digits span.f { border-color: var(--lk-primary); }
+.lock-digits span.cur { border-color: var(--lk-primary); box-shadow: inset 0 -2px 0 var(--lk-primary); }
+.lock-msg { min-height: 18px; font-size: 12.5px; color: var(--lk-muted); }
 .lock-msg--err { color: var(--danger); }
 .lock-msg--ok { color: var(--success); }
 .lock-pad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 16px; }
-.lock-key { display: inline-flex; align-items: center; justify-content: center; height: 48px; border: 1px solid var(--line); border-radius: 10px; background: var(--page-solid); color: var(--text); font-size: 19px; font-weight: 500; font-variant-numeric: tabular-nums; transition: background 0.12s, border-color 0.12s, opacity 0.12s; }
-.lock-key app-icon { --icon-size: 20px; }
+.lock-key { display: inline-flex; align-items: center; justify-content: center; height: 48px; border: 1px solid var(--line); border-radius: 10px; background: var(--lk-field); color: var(--text); font-size: 19px; font-weight: 500; font-variant-numeric: tabular-nums; transition: background 0.12s, border-color 0.12s, opacity 0.12s; }
+.lock-key-icon { display: block; width: 20px; height: 20px; flex: none; }
 .lock-key:hover:not(:disabled) { background: var(--hover); }
-.lock-key:active:not(:disabled) { background: var(--tint); border-color: var(--accent); }
+.lock-key:active:not(:disabled) { background: var(--lk-tint); border-color: var(--lk-primary); }
 .lock-key:disabled { opacity: 0.5; }
-.lock-key--muted { color: var(--muted); }
-.lock-key--enter { border-color: var(--accent); background: var(--accent); color: #fff; }
-.lock-key--enter:hover:not(:disabled) { background: color-mix(in srgb, var(--accent) 88%, #fff); }
+.lock-key--muted { color: var(--lk-muted); }
+.lock-key--enter { border-color: var(--lk-primary); background: var(--lk-primary); color: #fff; }
+.lock-key--enter:hover:not(:disabled) { background: color-mix(in srgb, var(--lk-primary) 88%, #fff); }
 .lock-key--enter .spinner { border-color: rgba(255, 255, 255, 0.4); border-top-color: #fff; }
-.lock-cancel { margin-top: 14px; }
+.lock-cancel { height: 30px; margin-top: 14px; padding: 0 12px; color: var(--lk-muted); font-size: 13px; }
 .shake { animation: shake 0.4s; }
 @keyframes shake { 20%, 60% { transform: translateX(-7px); } 40%, 80% { transform: translateX(7px); } }

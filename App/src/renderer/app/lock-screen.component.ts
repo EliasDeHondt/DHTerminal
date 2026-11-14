@@ -1,6 +1,5 @@
 import { ChangeDetectionStrategy, Component, DestroyRef, ElementRef, computed, inject, signal } from '@angular/core';
 import { t, TextKey, TPipe } from './i18n';
-import { IconComponent } from './icon.component';
 import { LockService } from './lock.service';
 
 type Step = 'enter' | 'current' | 'new' | 'confirm';
@@ -12,7 +11,7 @@ const PROMPT: Record<Step, TextKey> = { enter: 'lock.stepEnter', current: 'lock.
 @Component({
   selector: 'app-lock-screen',
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [IconComponent, TPipe],
+  imports: [TPipe],
   templateUrl: './lock-screen.component.html',
   styleUrl: './lock-screen.component.css',
 })
