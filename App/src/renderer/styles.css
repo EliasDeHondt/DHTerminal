@@ -123,8 +123,8 @@ button:disabled, button:disabled *, input:disabled, select:disabled { cursor: va
 .overlay--top { align-items: flex-start; padding-top: 56px; background: rgba(0, 0, 0, 0.3); }
 .overlay--clear { z-index: 800; background: transparent; animation: none; }
 .dialog { position: relative; display: flex; flex-direction: column; gap: 10px; width: 100%; max-width: 440px; padding: 26px 24px 22px; border: 1px solid var(--line); border-radius: 14px; background: var(--page-solid); color: var(--text); box-shadow: var(--shadow); overflow: hidden; animation: pop 0.16s ease-out; }
-.dialog::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: linear-gradient(90deg, var(--brand), var(--brand-2)); }
-.dialog--about { align-items: center; text-align: center; }
+.dialog::before { content: ''; position: absolute; left: 0; right: 0; top: 0; height: 3px; background: var(--accent); }
+.dialog--about { max-width: 400px; align-items: center; text-align: center; }
 .dialog-title { margin: 0; font-size: 17px; font-weight: 700; }
 .dialog-text { margin: 0; color: var(--text); }
 .dialog-text--muted { color: var(--muted); }
