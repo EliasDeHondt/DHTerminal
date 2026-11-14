@@ -6,9 +6,6 @@
 
 1. [📘Table of Contents](#📘table-of-contents)
 2. [🖖Introduction](#🖖introduction)
-3. [✨Features](#✨features)
-4. [⌨️Keyboard shortcuts](#⌨️keyboard-shortcuts)
-5. [🛠️Development](#🛠️development)
 
 ---
 
