@@ -1,10 +1,10 @@
-<img src="App/build/icon.png" width="96" alt="DHTerminal">
+<img width="128" height="128" alt="Group DH" src="https://raw.githubusercontent.com/Group-DH/.github/main/assets/logo.png"/>
 
 # 💙🤍SECURITY🤍💙
 
 ## Reporting a Vulnerability
 
-Your assistance in maintaining the security of our project is highly appreciated. If you uncover any security vulnerabilities within our system, we urge you to immediately report them privately through [GitHub Security Advisories](https://github.com/EliasDeHondt/DHTerminal/security/advisories/new).
+Your assistance in maintaining the security of our project is highly appreciated. If you uncover any security vulnerabilities within our system, we urge you to immediately report them to our dedicated security team at [security@group-dh.com](mailto:security@group-dh.com).
 
 We kindly request that you follow these guidelines:
 

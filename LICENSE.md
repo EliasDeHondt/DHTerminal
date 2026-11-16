@@ -1,8 +1,8 @@
-<img src="App/build/icon.png" width="96" alt="DHTerminal">
+<img width="128" height="128" alt="Group DH" src="https://raw.githubusercontent.com/Group-DH/.github/main/assets/logo.png"/>
 
 # 💙🤍LICENSE🤍💙
 
-Copyright © Elias De Hondt. All rights Reserved.
+Copyright © Group DH. All rights Reserved.
 
 No person is hereby granted, without charge, the permission to obtain a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -13,3 +13,10 @@ furnished from doing so, subject to the following conditions:
 
 The above copyright notice and this permission notice shall be included in all
 copies or substantial portions of the Software.
+
+---
+
+The terms outlined in the following documents also apply to this repository:
+
+- [Privacy Policy](https://group-dh.com/privacypolicy)
+- [Legal Guidelines](https://group-dh.com/legalguidelines)

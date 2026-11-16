@@ -83,6 +83,6 @@ export class SettingsComponent {
 
   swatches(sc: ColorScheme) { return [sc.red, sc.green, sc.yellow, sc.blue, sc.purple, sc.cyan, sc.white, sc.brightBlack]; }
   openJson() { bridge.openSettingsFile(); }
-  openSite() { bridge.openLink('https://eliasdh.com'); }
+  openSite() { bridge.openLink('https://group-dh.com'); }
   redetect() { this.state.reloadProfiles(true); }
 }

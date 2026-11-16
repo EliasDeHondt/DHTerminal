@@ -1,6 +1,6 @@
 appId: com.eliasdehondt.dhterminal
 productName: DHTerminal
-copyright: Copyright © Elias De Hondt
+copyright: Copyright © Group DH
 directories:
   output: release
   buildResources: build
