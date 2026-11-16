@@ -1,4 +1,4 @@
-<img width="128" height="128" alt="Group DH" src="https://raw.githubusercontent.com/Group-DH/.github/main/assets/logo.png"/>
+<img width="128" height="128" alt="Group DH" src="https://raw.githubusercontent.com/Group-DH/.github/main/assets/logo.png"/> <img width="128" height="128" alt="DHTerminal" src="App/build/icon.png"/>
 
 # 💙🤍CONTRIBUTING🤍💙
 
