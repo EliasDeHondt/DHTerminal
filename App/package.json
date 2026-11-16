@@ -1,7 +1,7 @@
 {
   "name": "dhterminal",
   "productName": "DHTerminal",
-  "version": "1.1.6",
+  "version": "1.1.7",
   "description": "DHTerminal, a modern tabbed terminal for Windows with every shell and WSL distro in one place, by Group DH.",
   "author": "Group DH",
   "license": "SEE LICENSE IN LICENSE.md",
