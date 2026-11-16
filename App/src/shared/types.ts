@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 
 export type ProfileSource = 'builtin' | 'wsl' | 'git' | 'vs' | 'msys' | 'ssh' | 'fragment' | 'windows-terminal' | 'custom';
 export type CursorStyle = 'bar' | 'block' | 'underline';

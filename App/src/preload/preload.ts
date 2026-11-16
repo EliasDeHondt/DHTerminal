@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { contextBridge, ipcRenderer, IpcRendererEvent } from 'electron';
 
 const INVOKE = ['app:info', 'profiles:detect', 'settings:get', 'settings:set', 'settings:open-file', 'icon:load', 'icon:pick', 'folder:pick', 'pty:spawn', 'clipboard:read', 'lock:status', 'lock:setup', 'lock:unlock', 'lock:verify', 'lock:change'];

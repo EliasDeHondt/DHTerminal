@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 
 const badge = (fill: string, letter: string, round = false) =>
   `${round ? `<circle cx="12" cy="12" r="10.5" fill="${fill}"/>` : `<rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="${fill}"/>`}<text x="12" y="16.6" text-anchor="middle" font-size="${letter.length > 1 ? 10 : 13}" font-weight="700" fill="#fff" font-family="Segoe UI Variable Display, Segoe UI, sans-serif">${letter}</text>`;

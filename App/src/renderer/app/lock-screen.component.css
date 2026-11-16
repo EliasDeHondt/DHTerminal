@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 :host { --lk-page: #060709; --lk-box: #0d1016; --lk-field: #060709; --lk-primary: #0f54ae; --lk-muted: #818a92; --lk-ink: #86b6ff; --lk-tint: color-mix(in srgb, #0f54ae 22%, transparent); position: fixed; inset: 0; z-index: 5000; display: flex; align-items: center; justify-content: center; padding: 56px 16px 16px; background-color: var(--lk-page); background-image: linear-gradient(var(--line-soft) 1px, transparent 1px), linear-gradient(90deg, var(--line-soft) 1px, transparent 1px); background-size: 24px 24px; -webkit-app-region: drag; animation: fade 0.2s ease-out; }
 :host-context([data-theme="light"]) { --lk-page: #f6f7f9; --lk-box: #ffffff; --lk-field: #f6f7f9; --lk-primary: #4f94f0; --lk-muted: #6c757d; --lk-ink: color-mix(in srgb, #4f94f0 78%, #0c0e11); --lk-tint: color-mix(in srgb, #4f94f0 12%, transparent); }
 .lock-box { -webkit-app-region: no-drag; position: relative; width: min(380px, 100%); padding: 30px 26px 24px; border: 1px solid var(--line); border-radius: 14px; background: var(--lk-box); box-shadow: var(--shadow); text-align: center; overflow: hidden; outline: none; animation: pop 0.2s ease-out; }

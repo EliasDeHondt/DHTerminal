@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 :host { display: flex; flex-direction: column; height: 100vh; background: var(--chrome); color: var(--text); }
 
 .titlebar { flex: none; height: 40px; padding-right: 140px; -webkit-app-region: drag; user-select: none; }

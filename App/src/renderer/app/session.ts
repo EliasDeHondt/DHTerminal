@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { signal } from '@angular/core';
 import { ITheme, Terminal } from '@xterm/xterm';
 import { FitAddon } from '@xterm/addon-fit';

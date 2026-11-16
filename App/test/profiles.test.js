@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 const test = require('node:test');
 const assert = require('node:assert');
 const { splitCommandline, expandEnv, guessIcon, mergeProfiles, dedupeKey, distroIcon } = require('../dist/main/shared/profiles.js');

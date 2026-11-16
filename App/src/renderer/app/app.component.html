@@ -1,3 +1,4 @@
+<!--Author Group DH Team-->
 <header class="titlebar" [class.titlebar--light-active]="state.activeIsLight()">
   <button class="brand" (click)="state.toggleOverlay('about')" [title]="'bar.about' | t" [attr.aria-label]="'bar.about' | t"><img src="assets/logo.svg" alt="" draggable="false"><span class="brand-word">DHTerminal</span></button>
   <div class="tabs" role="tablist" (dragover)="$event.preventDefault()" (drop)="drop($event)">

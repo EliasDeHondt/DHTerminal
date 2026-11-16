@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { AppInfo, DetectResult, LockStatus, Settings, SpawnRequest, UnlockResult } from '../../shared/types';
 
 interface Api {

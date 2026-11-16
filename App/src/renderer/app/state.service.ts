@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { Injectable, Injector, NgZone, afterNextRender, computed, inject, signal } from '@angular/core';
 import { mergeProfiles } from '../../shared/profiles';
 import { BUILTIN_SCHEMES, isLightColor } from '../../shared/schemes';

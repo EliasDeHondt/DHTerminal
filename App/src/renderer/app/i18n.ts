@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { Pipe, PipeTransform, signal } from '@angular/core';
 import { Language } from '../../shared/types';
 

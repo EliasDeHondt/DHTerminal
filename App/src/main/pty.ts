@@ -1,3 +1,9 @@
+/**
+    * @author Group DH Team
+    * @see https://group-dh.com
+    * @since 16/11/2026
+**/
+
 import { WebContents } from 'electron';
 import { existsSync, statSync } from 'node:fs';
 import { homedir } from 'node:os';
